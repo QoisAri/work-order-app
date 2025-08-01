@@ -6,7 +6,7 @@ import SafetyEquipmentForm from "../../components/SafetyEquipmentForm";
 import UtilityForm from "../../components/UtilityForm";
 import LandBuildingForm from "../../components/LandBuildingForm";
 import SurveyForm from "../../components/SurveyForm";
-import OtherForm from "../../components/OtherForm"; // 1. Impor form baru
+import OtherForm from "../../components/OtherForm";
 import { notFound } from "next/navigation";
 
 async function getEquipment(id: string) {
@@ -30,7 +30,6 @@ export default async function CreateWorkOrderPage({ params }: { params: { equipm
   }
   
   const renderForm = () => {
-    // Nama equipment di sini harus sama persis dengan yang ada di database Anda
     switch (equipment.nama_equipment) {
       case 'Compressor':
         return <CompressorForm equipmentId={params.equipmentId} />;
@@ -46,12 +45,12 @@ export default async function CreateWorkOrderPage({ params }: { params: { equipm
         return <LandBuildingForm equipmentId={params.equipmentId} />;
       case 'Survey':
         return <SurveyForm equipmentId={params.equipmentId} />;
-      // 2. Tambahkan case baru untuk Other
       case 'Other':
         return <OtherForm equipmentId={params.equipmentId} />;
       default:
         return (
           <div className="bg-white p-8 rounded-lg shadow-md">
+            {/* PERBAIKAN DI SINI: Mengganti " dengan &quot; */}
             <h1 className="text-xl font-bold">Form untuk &quot;{equipment.nama_equipment}&quot; belum dibuat.</h1>
             <p className="mt-2 text-gray-600">Silakan hubungi administrator.</p>
           </div>

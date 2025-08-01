@@ -4,16 +4,14 @@ import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 
-// Definisikan tipe data untuk item dropdown
 type DropdownItem = {
-  id: number | string; // Bisa number (jika serial) atau string (jika uuid)
+  id: number | string;
   nama_departemen?: string;
   nama_pekerjaan?: string;
 };
 
 export default function HomePage() {
   const router = useRouter();
-  // 1. KEMBALIKAN STATE UNTUK DEPARTEMEN
   const [subDepartments, setSubDepartments] = useState<DropdownItem[]>([]);
   const [jobTypes, setJobTypes] = useState<DropdownItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,9 +21,7 @@ export default function HomePage() {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
-
       try {
-        // 2. TAMBAHKAN LOGIKA UNTUK MENGAMBIL DATA DEPARTEMEN DARI SUPABASE
         const { data: deptsData, error: deptsError } = await supabase.from('sub_departments').select('*');
         if (deptsError) throw deptsError;
         setSubDepartments(deptsData || []);
@@ -33,8 +29,8 @@ export default function HomePage() {
         const { data: jobsData, error: jobsError } = await supabase.from('job_types').select('id, nama_pekerjaan');
         if (jobsError) throw jobsError;
         setJobTypes(jobsData || []);
-
-           } catch (err: unknown) { // <-- Perubahan di sini
+      // PERBAIKAN DI SINI: Mengubah 'err: any' menjadi 'err: unknown' dan menambahkan pengecekan
+      } catch (err: unknown) {
         if (err instanceof Error) {
             setError(`Gagal memuat data: ${err.message}`);
         } else {
@@ -80,21 +76,17 @@ export default function HomePage() {
             <label htmlFor="no_wa" className="block text-sm font-medium text-gray-700">No. WhatsApp</label>
             <input type="tel" name="no_wa" id="no_wa" required className="mt-1 block w-full rounded-md border-gray-300 text-black shadow-sm focus:border-blue-500 focus:ring-blue-500"/>
           </div>
-          
-          {/* 3. UBAH DROPDOWN AGAR MENGGUNAKAN DATA DARI STATE */}
           <div>
             <label htmlFor="sub_depart" className="block text-sm font-medium text-gray-700">User Sub Depart</label>
-            <select name="sub_depart" id="sub_depart" required disabled={isLoading} className="mt-1 block w-full rounded-md border-gray-300 text-black shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200">
-              <option value="" disabled selected className="text-gray-500">Pilih Departemen...</option>
-              {/* Mengisi pilihan dari data Supabase */}
+            <select name="sub_depart" id="sub_depart" required disabled={isLoading} defaultValue="" className="mt-1 block w-full rounded-md border-gray-300 text-black shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200">
+              <option value="" disabled className="text-gray-500">Pilih Departemen...</option>
               {subDepartments.map(dept => <option key={dept.id} value={dept.nama_departemen}>{dept.nama_departemen}</option>)}
             </select>
           </div>
-
           <div>
             <label htmlFor="job_type_id" className="block text-sm font-medium text-gray-700">Jenis Pekerjaan</label>
-            <select name="job_type_id" id="job_type_id" required disabled={isLoading} className="mt-1 block w-full rounded-md border-gray-300 text-black shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200">
-              <option value="" disabled selected className="text-gray-500">Pilih Pekerjaan...</option>
+            <select name="job_type_id" id="job_type_id" required disabled={isLoading} defaultValue="" className="mt-1 block w-full rounded-md border-gray-300 text-black shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-200">
+              <option value="" disabled className="text-gray-500">Pilih Pekerjaan...</option>
               {jobTypes.map(item => <option key={item.id} value={item.id}>{item.nama_pekerjaan}</option>)}
             </select>
           </div>
@@ -102,7 +94,6 @@ export default function HomePage() {
             Lanjutkan
           </button>
         </form>
-
         {error && (
             <div className="mt-4 rounded-md bg-red-50 p-4">
                 <p className="text-sm font-medium text-red-800">{error}</p>

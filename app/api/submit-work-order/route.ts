@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-// Inisialisasi Supabase client khusus untuk server
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -12,21 +11,17 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const emailTujuan = 'qoisrz5@gmail.com';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-// Fungsi helper untuk mengubah objek detail menjadi tabel HTML yang rapi
+// PERBAIKAN DI SINI: Mengubah tipe 'details: any' menjadi 'details: Record<string, any>'
 function formatDetailsToHtml(details: Record<string, any>) {
     let tableRows = '';
     for (const key in details) {
-        // Mengubah nama kunci menjadi lebih mudah dibaca (misal: noCompressor -> No Compressor)
         const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        
         let value = details[key];
-        // Jika nilainya adalah array (dari checkbox), ubah menjadi daftar list
         if (Array.isArray(value) && value.length > 0) {
             value = `<ul>${value.map(item => `<li>${item}</li>`).join('')}</ul>`;
         } else if (!value) {
             value = 'Tidak diisi';
         }
-        
         tableRows += `<tr><td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold; text-transform: capitalize;">${formattedKey}</td><td style="padding: 8px; border: 1px solid #ddd;">${value}</td></tr>`;
     }
     return `<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">${tableRows}</table>`;
@@ -37,27 +32,19 @@ export async function POST(request: Request) {
     const body = await request.json();
     let userId: string;
 
-    // 1. Cari atau buat user berdasarkan email
     const { data: existingUser } = await supabaseAdmin.from('users').select('id').eq('email', body.email).single();
     if (existingUser) {
       userId = existingUser.id;
     } else {
-      const { data: newUser } = await supabaseAdmin.from('users').insert({ nama_lengkap: body.nama, email: body.email, sub_depart: body.sub_depart, role: 'admin' }).select('id').single();
+      const { data: newUser } = await supabaseAdmin.from('users').insert({ nama_lengkap: body.nama, email: body.email, sub_depart: body.sub_depart, role: 'user' }).select('id').single();
       if (!newUser) throw new Error('Gagal membuat user baru.');
       userId = newUser.id;
     }
 
-    // 2. Ambil nama pekerjaan dari database berdasarkan job_type_id
-    const { data: jobType, error: jobError } = await supabaseAdmin
-      .from('job_types')
-      .select('nama_pekerjaan')
-      .eq('id', body.job_type_id)
-      .single();
-
+    const { data: jobType, error: jobError } = await supabaseAdmin.from('job_types').select('nama_pekerjaan').eq('id', body.job_type_id).single();
     if (jobError) throw new Error(`Gagal mengambil jenis pekerjaan: ${jobError.message}`);
     const namaPekerjaan = jobType?.nama_pekerjaan || 'Tidak diketahui';
 
-    // 3. Simpan Work Order ke database
     const { data: woData, error: dbError } = await supabaseAdmin
       .from('work_orders')
       .insert({
@@ -72,9 +59,8 @@ export async function POST(request: Request) {
       throw new Error(`Database Error: ${dbError?.message || 'Gagal menyimpan work order'}`);
     }
 
-    // 4. Buat link dan konten email yang lengkap
     const approveUrl = `${appUrl}/api/handle-approval?id=${woData.id}&action=approved`;
-    const rejectUrl = `${appUrl}/reject-form?id=${woData.id}`; 
+    const rejectUrl = `${appUrl}/reject-form?id=${woData.id}`;
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
@@ -101,7 +87,6 @@ export async function POST(request: Request) {
       </div>
     `;
 
-    // 5. Kirim email
     await resend.emails.send({
       from: 'Sistem Work Order <onboarding@resend.dev>',
       to: [emailTujuan],
