@@ -52,7 +52,7 @@ export default async function CreateWorkOrderPage({ params }: { params: { equipm
       default:
         return (
           <div className="bg-white p-8 rounded-lg shadow-md">
-            <h1 className="text-xl font-bold">Form untuk "{equipment.nama_equipment}" belum dibuat.</h1>
+            <h1 className="text-xl font-bold">Form untuk &quot;{equipment.nama_equipment}&quot; belum dibuat.</h1>
             <p className="mt-2 text-gray-600">Silakan hubungi administrator.</p>
           </div>
         );

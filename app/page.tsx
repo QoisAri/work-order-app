@@ -34,8 +34,12 @@ export default function HomePage() {
         if (jobsError) throw jobsError;
         setJobTypes(jobsData || []);
 
-      } catch (err: any) {
-        setError(`Gagal memuat data: ${err.message}`);
+           } catch (err: unknown) { // <-- Perubahan di sini
+        if (err instanceof Error) {
+            setError(`Gagal memuat data: ${err.message}`);
+        } else {
+            setError('Terjadi error tidak diketahui');
+        }
         console.error(err);
       } finally {
         setIsLoading(false);

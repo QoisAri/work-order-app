@@ -13,7 +13,7 @@ const emailTujuan = 'qoisrz5@gmail.com';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 // Fungsi helper untuk mengubah objek detail menjadi tabel HTML yang rapi
-function formatDetailsToHtml(details: any) {
+function formatDetailsToHtml(details: Record<string, any>) {
     let tableRows = '';
     for (const key in details) {
         // Mengubah nama kunci menjadi lebih mudah dibaca (misal: noCompressor -> No Compressor)
