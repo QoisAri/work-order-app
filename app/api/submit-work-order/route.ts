@@ -11,7 +11,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const emailTujuan = 'qoisrz5@gmail.com';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-// PERBAIKAN DI SINI: Mengubah tipe 'details: any' menjadi 'details: Record<string, any>'
+// PERBAIKAN DI SINI: Tipe diubah dari 'any' menjadi 'Record<string, any>'
 function formatDetailsToHtml(details: Record<string, any>) {
     let tableRows = '';
     for (const key in details) {
