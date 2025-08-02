@@ -9,6 +9,13 @@ import SurveyForm from "../../components/SurveyForm";
 import OtherForm from "../../components/OtherForm";
 import { notFound } from "next/navigation";
 
+// Definisikan tipe untuk props halaman ini
+type PageProps = {
+  params: {
+    equipmentId: string;
+  };
+};
+
 async function getEquipment(id: string) {
   const { data, error } = await supabase
     .from('equipments')
@@ -22,7 +29,8 @@ async function getEquipment(id: string) {
   return data;
 }
 
-export default async function CreateWorkOrderPage({ params }: { params: { equipmentId: string } }) {
+// PERBAIKAN DI SINI: Gunakan tipe PageProps yang sudah kita definisikan
+export default async function CreateWorkOrderPage({ params }: PageProps) {
   const equipment = await getEquipment(params.equipmentId);
 
   if (!equipment) {
@@ -30,6 +38,7 @@ export default async function CreateWorkOrderPage({ params }: { params: { equipm
   }
   
   const renderForm = () => {
+    // Nama equipment di sini harus sama persis dengan yang ada di database Anda
     switch (equipment.nama_equipment) {
       case 'Compressor':
         return <CompressorForm equipmentId={params.equipmentId} />;
@@ -50,7 +59,6 @@ export default async function CreateWorkOrderPage({ params }: { params: { equipm
       default:
         return (
           <div className="bg-white p-8 rounded-lg shadow-md">
-            {/* PERBAIKAN DI SINI: Mengganti " dengan &quot; */}
             <h1 className="text-xl font-bold">Form untuk &quot;{equipment.nama_equipment}&quot; belum dibuat.</h1>
             <p className="mt-2 text-gray-600">Silakan hubungi administrator.</p>
           </div>
