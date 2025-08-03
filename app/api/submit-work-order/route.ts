@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     if (existingUser) {
       userId = existingUser.id;
     } else {
-      const { data: newUser } = await supabaseAdmin.from('users').insert({ nama_lengkap: body.nama, email: body.email, sub_depart: body.sub_depart, role: 'admin' }).select('id').single();
+      const { data: newUser } = await supabaseAdmin.from('users').insert({ nama_lengkap: body.nama, email: body.email, sub_depart: body.sub_depart, role: 'user' }).select('id').single();
       if (!newUser) throw new Error('Gagal membuat user baru.');
       userId = newUser.id;
     }

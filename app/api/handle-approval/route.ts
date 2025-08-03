@@ -20,9 +20,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // 1. Update status di database
     await supabaseAdmin.from('work_orders').update({ status: 'approved' }).eq('id', id);
 
+    // 2. Ambil detail work order untuk dikirim di email
     const { data: workOrder } = await supabaseAdmin.from('work_orders').select('*, equipments(nama_equipment)').eq('id', id).single();
+    
+    // 3. Kirim email konfirmasi ke pemohon
     if (workOrder) {
         const emailHtml = `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
@@ -34,18 +38,18 @@ export async function GET(request: NextRequest) {
                 <ul style="list-style-type: none; padding: 0;">
                   <li><strong>ID Work Order:</strong> ${workOrder.id}</li>
                   <li><strong>Equipment:</strong> ${workOrder.equipments.nama_equipment}</li>
-                  <li><strong>Deskripsi:</strong> ${workOrder.details.deskripsi || workOrder.details.deskripsiMaintenance || workOrder.details.deskripsiSafetyEquipment || 'Tidak ada deskripsi'}</li>
                 </ul>
                 <p style="margin-top: 20px;">Terima kasih.</p>
               </div>
             `;
         await resend.emails.send({
           from: 'Sistem Work Order <onboarding@resend.dev>',
-          to: [workOrder.email_pemohon],
+          to: [workOrder.email_pemohon], // Mengirim ke email pemohon
           subject: `[DISETUJUI] Work Order Anda (ID: ${workOrder.id})`,
           html: emailHtml,
         });
     }
+    // 4. Arahkan admin ke halaman sukses
     return NextResponse.redirect(`${appUrl}/approval-success`);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi error tidak diketahui';
@@ -63,42 +67,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Data tidak lengkap.' }, { status: 400 });
     }
 
+    // 1. Update status dan alasan di database
     await supabaseAdmin
       .from('work_orders')
       .update({ status: 'rejected', rejection_reason: reason })
       .eq('id', id);
 
+    // 2. Ambil detail pemohon untuk dikirim di email
     const { data: workOrder } = await supabaseAdmin
       .from('work_orders')
       .select('email_pemohon, nama_pemohon')
       .eq('id', id)
       .single();
 
-    if (!workOrder) {
-        return NextResponse.json({ message: 'Work Order berhasil ditolak, namun email notifikasi gagal dikirim (data tidak ditemukan).' });
+    // 3. Kirim email notifikasi penolakan ke pemohon
+    if (workOrder) {
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+            <h1 style="color: #dc3545;">Work Order Anda Ditolak</h1>
+            <p>Halo <strong>${workOrder.nama_pemohon}</strong>,</p>
+            <p>Mohon maaf, permintaan Work Order Anda dengan ID <strong>${id}</strong> telah ditolak dengan alasan sebagai berikut:</p>
+            <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin-top: 15px;">
+              <p style="margin: 0;"><em>${reason}</em></p>
+            </div>
+            <p style="margin-top: 20px;">Silakan hubungi administrator jika Anda memiliki pertanyaan.</p>
+          </div>
+        `;
+        await resend.emails.send({
+          from: 'Sistem Work Order <onboarding@resend.dev>',
+          to: [workOrder.email_pemohon], // Mengirim ke email pemohon
+          subject: `[DITOLAK] Work Order Anda (ID: ${id})`,
+          html: emailHtml,
+        });
     }
 
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h1 style="color: #dc3545;">Work Order Anda Ditolak</h1>
-        <p>Halo <strong>${workOrder.nama_pemohon}</strong>,</p>
-        <p>Mohon maaf, permintaan Work Order Anda dengan ID <strong>${id}</strong> telah ditolak dengan alasan sebagai berikut:</p>
-        <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin-top: 15px;">
-          <p style="margin: 0;"><em>${reason}</em></p>
-        </div>
-        <p style="margin-top: 20px;">Silakan hubungi administrator jika Anda memiliki pertanyaan.</p>
-      </div>
-    `;
-
-    await resend.emails.send({
-      from: 'Sistem Work Order <onboarding@resend.dev>',
-      to: [workOrder.email_pemohon],
-      subject: `[DITOLAK] Work Order Anda (ID: ${id})`,
-      html: emailHtml,
-    });
-
     return NextResponse.json({ message: 'Work Order telah berhasil ditolak dan notifikasi telah dikirim ke pemohon.' });
-
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi error tidak diketahui';
     console.error("Error di handle-approval (POST):", errorMessage);
