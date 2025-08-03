@@ -98,7 +98,7 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <label htmlFor="no_compressor" className="block text-base font-semibold text-gray-800">No. Compressor *</label>
             <select name="no_compressor" id="no_compressor" required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm">
-                <option value="" disabled selected>--Pilih--</option>
+                <option value="" disabled>--Pilih--</option>
                 {noCompressorOptions.map(no => <option key={no} value={no}>{no}</option>)}
             </select>
         </div>
