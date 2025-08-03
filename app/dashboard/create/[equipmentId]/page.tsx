@@ -1,3 +1,7 @@
+'use client'; // 1. Tambahkan ini untuk mengubahnya menjadi Client Component
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation'; // 2. Impor hook baru
 import { supabase } from "@/lib/supabaseClient";
 import CompressorForm from "../../components/CompressorForm";
 import StorageForm from "../../components/StorageForm";
@@ -7,55 +11,74 @@ import UtilityForm from "../../components/UtilityForm";
 import LandBuildingForm from "../../components/LandBuildingForm";
 import SurveyForm from "../../components/SurveyForm";
 import OtherForm from "../../components/OtherForm";
-import { notFound } from "next/navigation";
 
-// Definisikan tipe untuk props halaman ini
-type PageProps = {
-  params: {
-    equipmentId: string;
-  };
-};
+// Definisikan tipe untuk data equipment
+type Equipment = {
+  nama_equipment: string;
+} | null;
 
-async function getEquipment(id: string) {
-  const { data, error } = await supabase
-    .from('equipments')
-    .select('nama_equipment')
-    .eq('id', id)
-    .single();
+export default function CreateWorkOrderPage() {
+  const params = useParams(); // 3. Gunakan hook untuk mendapatkan parameter URL
+  const equipmentId = params.equipmentId as string;
 
-  if (error || !data) {
-    return null;
+  // 4. Gunakan state untuk loading dan data equipment
+  const [equipment, setEquipment] = useState<Equipment>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 5. Gunakan useEffect untuk mengambil data setelah halaman dimuat di browser
+  useEffect(() => {
+    if (!equipmentId) return;
+
+    const getEquipment = async () => {
+      setLoading(true);
+      setError(null);
+      const { data, error } = await supabase
+        .from('equipments')
+        .select('nama_equipment')
+        .eq('id', equipmentId)
+        .single();
+
+      if (error || !data) {
+        setError("Gagal menemukan data equipment.");
+      } else {
+        setEquipment(data);
+      }
+      setLoading(false);
+    };
+
+    getEquipment();
+  }, [equipmentId]); // Efek ini akan berjalan setiap kali equipmentId berubah
+
+  // Tampilkan pesan loading saat data sedang diambil
+  if (loading) {
+    return <div className="bg-white p-8 rounded-lg shadow-md">Memuat form...</div>;
   }
-  return data;
-}
 
-// PERBAIKAN DI SINI: Gunakan tipe PageProps yang sudah kita definisikan
-export default async function CreateWorkOrderPage({ params }: { params: { equipmentId: string } }) {
-  const equipment = await getEquipment(params.equipmentId);
-
-  if (!equipment) {
-    notFound();
+  // Tampilkan pesan error jika data tidak ditemukan
+  if (error || !equipment) {
+    return <div className="bg-white p-8 rounded-lg shadow-md"><p className="text-red-500">{error || "Equipment tidak ditemukan."}</p></div>;
   }
   
+  // Fungsi untuk memilih komponen form mana yang akan dirender
   const renderForm = () => {
-    // Nama equipment di sini harus sama persis dengan yang ada di database Anda
     switch (equipment.nama_equipment) {
       case 'Compressor':
-        return <CompressorForm equipmentId={params.equipmentId} />;
+        return <CompressorForm equipmentId={equipmentId} />;
       case 'Storage':
-        return <StorageForm equipmentId={params.equipmentId} />;
+        return <StorageForm equipmentId={equipmentId} />;
       case 'MRS':
-        return <MrsForm equipmentId={params.equipmentId} />;
+        return <MrsForm equipmentId={equipmentId} />;
       case 'Safety Equipment':
-        return <SafetyEquipmentForm equipmentId={params.equipmentId} />;
+        return <SafetyEquipmentForm equipmentId={equipmentId} />;
       case 'Utility (genset, LVMDP, Trafo)':
-        return <UtilityForm equipmentId={params.equipmentId} />;
+        return <UtilityForm equipmentId={equipmentId} />;
       case 'Land and Building':
-        return <LandBuildingForm equipmentId={params.equipmentId} />;
+        return <LandBuildingForm equipmentId={equipmentId} />;
       case 'Survey':
-        return <SurveyForm equipmentId={params.equipmentId} />;
+        return <SurveyForm equipmentId={equipmentId} />;
       case 'Other':
-        return <OtherForm equipmentId={params.equipmentId} />;
+        return <OtherForm equipmentId={equipmentId} />;
       default:
         return (
           <div className="bg-white p-8 rounded-lg shadow-md">
