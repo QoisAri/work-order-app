@@ -30,7 +30,7 @@ async function getEquipment(id: string) {
 }
 
 // PERBAIKAN DI SINI: Gunakan tipe PageProps yang sudah kita definisikan
-export default async function CreateWorkOrderPage({ params }: PageProps) {
+export default async function CreateWorkOrderPage({ params }: { params: { equipmentId: string } }) {
   const equipment = await getEquipment(params.equipmentId);
 
   if (!equipment) {
