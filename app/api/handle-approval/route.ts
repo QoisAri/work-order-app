@@ -9,42 +9,22 @@ const supabaseAdmin = createClient(
 const resend = new Resend(process.env.RESEND_API_KEY);
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
+// Fungsi GET untuk menangani persetujuan
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
   const action = searchParams.get('action');
 
-  if (!id || !action || (action !== 'approved' && action !== 'rejected')) {
+  if (!id || action !== 'approved') {
     return NextResponse.json({ message: 'Parameter tidak valid.' }, { status: 400 });
   }
 
   try {
-    // 1. Update status work order di database
-    const { error: updateError } = await supabaseAdmin
-      .from('work_orders')
-      .update({ status: action })
-      .eq('id', id);
+    await supabaseAdmin.from('work_orders').update({ status: 'approved' }).eq('id', id);
 
-    if (updateError) {
-      throw new Error(`Gagal update status: ${updateError.message}`);
-    }
-
-    // --- PERUBAHAN UTAMA DI SINI ---
-    // 2. Jika tindakan adalah 'approved', kirim email konfirmasi ke pemohon
-    if (action === 'approved') {
-        // Ambil detail lengkap work order dari database untuk dikirim di email
-        const { data: workOrder, error: fetchError } = await supabaseAdmin
-            .from('work_orders')
-            .select('*, equipments(nama_equipment)') // Ambil juga nama equipment
-            .eq('id', id)
-            .single();
-
-        // Jika gagal mengambil data, lewati pengiriman email agar tidak error
-        if (fetchError || !workOrder) {
-            console.error("Gagal mengambil detail WO untuk email konfirmasi:", fetchError?.message);
-        } else {
-            // Buat isi email konfirmasi
-            const emailHtml = `
+    const { data: workOrder } = await supabaseAdmin.from('work_orders').select('*, equipments(nama_equipment)').eq('id', id).single();
+    if (workOrder) {
+        const emailHtml = `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
                 <h1 style="color: #28a745;">Work Order Anda Telah Disetujui!</h1>
                 <p>Halo <strong>${workOrder.nama_pemohon}</strong>,</p>
@@ -59,29 +39,69 @@ export async function GET(request: NextRequest) {
                 <p style="margin-top: 20px;">Terima kasih.</p>
               </div>
             `;
-
-            // Kirim email ke pemohon
-            await resend.emails.send({
-              from: 'Sistem Work Order <onboarding@resend.dev>',
-              to: [workOrder.email_pemohon], // Kirim ke email pemohon
-              subject: `[DISETUJUI] Work Order Anda (ID: ${workOrder.id})`,
-              html: emailHtml,
-            });
-        }
+        await resend.emails.send({
+          from: 'Sistem Work Order <onboarding@resend.dev>',
+          to: [workOrder.email_pemohon],
+          subject: `[DISETUJUI] Work Order Anda (ID: ${workOrder.id})`,
+          html: emailHtml,
+        });
     }
-    // --- AKHIR PERUBAHAN ---
+    return NextResponse.redirect(`${appUrl}/approval-success`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Terjadi error tidak diketahui';
+    console.error("Error di handle-approval (GET):", errorMessage);
+    return new NextResponse(`Terjadi kesalahan: ${errorMessage}`, { status: 500 });
+  }
+}
 
-    // 3. Arahkan approver ke halaman yang sesuai
-    if (action === 'approved') {
-        return NextResponse.redirect(`${appUrl}/approval-success`);
-    } else {
-        return NextResponse.redirect(`${appUrl}/approval-rejected`);
+// Fungsi POST untuk menangani penolakan
+export async function POST(request: NextRequest) {
+  try {
+    const { id, action, reason } = await request.json();
+
+    if (!id || action !== 'rejected' || !reason) {
+      return NextResponse.json({ message: 'Data tidak lengkap.' }, { status: 400 });
     }
+
+    await supabaseAdmin
+      .from('work_orders')
+      .update({ status: 'rejected', rejection_reason: reason })
+      .eq('id', id);
+
+    const { data: workOrder } = await supabaseAdmin
+      .from('work_orders')
+      .select('email_pemohon, nama_pemohon')
+      .eq('id', id)
+      .single();
+
+    if (!workOrder) {
+        return NextResponse.json({ message: 'Work Order berhasil ditolak, namun email notifikasi gagal dikirim (data tidak ditemukan).' });
+    }
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+        <h1 style="color: #dc3545;">Work Order Anda Ditolak</h1>
+        <p>Halo <strong>${workOrder.nama_pemohon}</strong>,</p>
+        <p>Mohon maaf, permintaan Work Order Anda dengan ID <strong>${id}</strong> telah ditolak dengan alasan sebagai berikut:</p>
+        <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin-top: 15px;">
+          <p style="margin: 0;"><em>${reason}</em></p>
+        </div>
+        <p style="margin-top: 20px;">Silakan hubungi administrator jika Anda memiliki pertanyaan.</p>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: 'Sistem Work Order <onboarding@resend.dev>',
+      to: [workOrder.email_pemohon],
+      subject: `[DITOLAK] Work Order Anda (ID: ${id})`,
+      html: emailHtml,
+    });
+
+    return NextResponse.json({ message: 'Work Order telah berhasil ditolak dan notifikasi telah dikirim ke pemohon.' });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi error tidak diketahui';
-    console.error("Error di handle-approval:", errorMessage);
-    // Mungkin arahkan ke halaman error umum
-    return new NextResponse(`Terjadi kesalahan: ${errorMessage}`, { status: 500 });
+    console.error("Error di handle-approval (POST):", errorMessage);
+    return NextResponse.json({ message: `Gagal memproses penolakan: ${errorMessage}` }, { status: 500 });
   }
 }
