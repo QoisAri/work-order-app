@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,20 +63,32 @@ export async function GET(request: NextRequest) {
     </body>
   `;
 
+  let browser = null;
   try {
-    const browser = await puppeteer.launch({ headless: true });
+    // --- PENGATURAN BARU YANG SUDAH DIPERBAIKI ---
+    // Kita hanya perlu memberikan argumen dan path executable-nya saja.
+    // Opsi lain yang menyebabkan error sudah dihapus.
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+    });
+
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
     const fileBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '40px', right: '40px', bottom: '40px', left: '40px' } });
-    await browser.close();
 
     const headers = new Headers();
     headers.append('Content-Type', 'application/pdf');
     headers.append('Content-Disposition', `attachment; filename="WO-${wo.wo_number}.pdf"`);
 
     return new NextResponse(fileBuffer, { status: 200, headers: headers });
+
   } catch (pdfError: any) {
     console.error("PDF Generation Error (Puppeteer):", pdfError);
     return new NextResponse(`Gagal membuat PDF: ${pdfError.message}`, { status: 500 });
+  } finally {
+    if (browser !== null) {
+      await browser.close();
+    }
   }
 }
