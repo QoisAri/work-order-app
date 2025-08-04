@@ -1,13 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer'; // 1. Ganti Resend dengan Nodemailer
+import nodemailer from 'nodemailer';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// 2. Gunakan transporter Nodemailer
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -16,7 +15,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const emailTujuan = 'cngworkshop25@gmail.com';
+const emailTujuan = 'qoisrz5@gmail.com';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 function formatDetailsToHtml(details: Record<string, any>) {
@@ -52,9 +51,36 @@ export async function POST(request: Request) {
     if (jobError) throw new Error(`Gagal mengambil jenis pekerjaan: ${jobError.message}`);
     const namaPekerjaan = jobType?.nama_pekerjaan || 'Tidak diketahui';
 
+    // --- BLOK BARU: GENERATE WO NUMBER ---
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const prefix = `${year}-${month}`;
+
+    // 1. Cari WO terakhir di bulan ini
+    const { data: lastWo } = await supabaseAdmin
+      .from('work_orders')
+      .select('wo_number')
+      .like('wo_number', `${prefix}-%`)
+      .order('wo_number', { ascending: false })
+      .limit(1)
+      .single();
+
+    let newSequence = 1;
+    if (lastWo) {
+      const lastSequence = parseInt(lastWo.wo_number.split('-')[2], 10);
+      newSequence = lastSequence + 1;
+    }
+    
+    // 2. Buat nomor WO baru dengan format 3 digit
+    const newWoNumber = `${prefix}-${newSequence.toString().padStart(3, '0')}`;
+    // --- AKHIR BLOK BARU ---
+
+
     const { data: woData, error: dbError } = await supabaseAdmin
       .from('work_orders')
       .insert({
+        wo_number: newWoNumber, // <-- SIMPAN NOMOR WO BARU
         nama_pemohon: body.nama, email_pemohon: body.email, no_wa_pemohon: body.no_wa,
         sub_depart: body.sub_depart, job_type_id: body.job_type_id, equipment_id: body.equipment_id,
         status: 'pending', details: body.details, user_id: userId,
@@ -72,7 +98,10 @@ export async function POST(request: Request) {
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
         <h1 style="color: #333;">Work Order Baru Diterima</h1>
-        <p><strong>ID Work Order:</strong> ${woData.id}</p>
+        
+        {/* --- UBAH DARI ID MENJADI NOMOR WO --- */}
+        <p><strong>Nomor Work Order:</strong> ${newWoNumber}</p>
+        
         <hr style="border: none; border-top: 1px solid #eee;">
         <h3 style="color: #333;">Detail Pemohon:</h3>
         <ul style="list-style-type: none; padding: 0;">
@@ -94,12 +123,11 @@ export async function POST(request: Request) {
       </div>
     `;
     
-    // 3. Gunakan transporter.sendMail untuk mengirim email
     await transporter.sendMail({
       from: `"Sistem Work Order" <${process.env.GMAIL_EMAIL}>`,
       to: emailTujuan,
       cc: body.email,
-      subject: `[WORK ORDER BARU] untuk ${body.details?.noCompressor || 'Peralatan'}`,
+      subject: `[WORK ORDER BARU] ${newWoNumber}`,
       html: emailHtml,
     });
 
