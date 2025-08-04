@@ -124,7 +124,6 @@ export async function POST(request: Request) {
     await transporter.sendMail({
       from: `"Sistem Work Order" <${process.env.GMAIL_EMAIL}>`,
       to: emailTujuan,
-      cc: body.email,
       subject: `[WORK ORDER BARU] ${newWoNumber}`,
       html: emailHtml,
     });
