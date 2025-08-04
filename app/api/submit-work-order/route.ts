@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const emailTujuan = 'qoisrz5@gmail.com';
+const emailTujuan = 'cngworkshop25@gmail.com';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 function formatDetailsToHtml(details: Record<string, any>) {
