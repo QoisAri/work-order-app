@@ -1,9 +1,6 @@
-// app/api/generate-pdf/route.ts
-// (Ini adalah kode Anda dengan sedikit modifikasi)
-
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
-import pdf from 'html-pdf-node';
+import puppeteer from 'puppeteer';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,17 +25,12 @@ export async function GET(request: NextRequest) {
     return new NextResponse(`Work Order tidak ditemukan: ${error?.message}`, { status: 404 });
   }
   
-  // --- TAMBAHAN PENTING ---
-  // Pastikan hanya WO yang sudah disetujui yang bisa diunduh
   if (wo.status !== 'approved' || !wo.wo_number) {
-    return new NextResponse('Dokumen ini tidak tersedia karena Work Order belum disetujui.', { status: 403 }); // 403 Forbidden
+    return new NextResponse('Dokumen ini tidak tersedia karena Work Order belum disetujui.', { status: 403 });
   }
-  // -------------------------
 
-  // Bagian HTML Anda sudah benar, tidak perlu diubah.
   const htmlContent = `
     <style>
-        /* ... CSS Anda di sini ... */
         body { font-family: Arial, sans-serif; font-size: 12px; }
         .header { display: flex; justify-content: space-between; align-items: flex-start; border: 1px solid black; padding: 10px; }
         .header-left { font-weight: bold; color: green; font-size: 16px; }
@@ -102,9 +94,14 @@ export async function GET(request: NextRequest) {
   `;
 
   try {
-    const options = { format: 'A4' };
-    // Pastikan `html-pdf-node` di-import sebagai objek dengan properti generatePdf
-    const fileBuffer = await pdf.generatePdf({ content: htmlContent }, options);
+    const browser = await puppeteer.launch({ headless: true }); // <-- PERUBAHAN DI SINI
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    const fileBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true
+    });
+    await browser.close();
 
     const headers = new Headers();
     headers.append('Content-Type', 'application/pdf');
@@ -114,8 +111,9 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: headers,
     });
-  } catch (pdfError) {
-    console.error("PDF Generation Error:", pdfError);
-    return new NextResponse('Gagal membuat PDF', { status: 500 });
+
+  } catch (pdfError: any) {
+    console.error("PDF Generation Error (Puppeteer):", pdfError);
+    return new NextResponse(`Gagal membuat PDF: ${pdfError.message}`, { status: 500 });
   }
 }

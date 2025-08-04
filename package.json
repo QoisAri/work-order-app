@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
-    "html-pdf-node": "^1.0.8",
     "next": "15.4.5",
     "nodemailer": "^7.0.5",
+    "puppeteer": "^24.15.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "resend": "^4.7.0"
@@ -20,7 +20,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/html-pdf-node": "^1.0.2",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",
