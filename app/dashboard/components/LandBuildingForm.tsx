@@ -65,8 +65,9 @@ export default function LandBuildingForm({ equipmentId }: { equipmentId: string 
       <form onSubmit={handleSubmit}>
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <label htmlFor="lokasi_perbaikan" className="block text-base font-semibold text-gray-800">Lokasi Perbaikan Land of Building *</label>
-          <select name="lokasi_perbaikan" id="lokasi_perbaikan" required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm">
-            <option value="" disabled selected>--Pilih--</option>
+          {/* PERBAIKAN: Menambahkan defaultValue, text-black, dan menghapus 'selected' di bawah */}
+          <select name="lokasi_perbaikan" id="lokasi_perbaikan" required defaultValue="" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black">
+            <option value="" disabled>--Pilih--</option>
             {lokasiOptions.map(lokasi => <option key={lokasi} value={lokasi}>{lokasi}</option>)}
           </select>
         </div>
@@ -76,14 +77,16 @@ export default function LandBuildingForm({ equipmentId }: { equipmentId: string 
           <div className="space-y-3">
             {maintenanceOptions.map(item => (
               <div key={item} className="flex items-center">
-                <input id={`maintenance-${item}`} name="equipment_maintenance" type="radio" value={item} required className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
+                {/* PERBAIKAN: Mengubah type="radio" menjadi type="checkbox" */}
+                <input id={`maintenance-${item}`} name="equipment_maintenance" type="checkbox" value={item} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                 <label htmlFor={`maintenance-${item}`} className="ml-3 block text-sm text-gray-900">{item}</label>
               </div>
             ))}
             <div className="flex items-center">
-              <input id="maintenance-lain-cb" name="equipment_maintenance" type="radio" value="Yang lain" className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
+              {/* PERBAIKAN: Mengubah type="radio" menjadi type="checkbox" */}
+              <input id="maintenance-lain-cb" name="equipment_maintenance" type="checkbox" value="Yang lain" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <label htmlFor="maintenance-lain-cb" className="ml-3 block text-sm text-gray-900">Yang lain:</label>
-              <input type="text" name="maintenance_lain" className="ml-2 w-48 rounded-md border-gray-300 shadow-sm text-sm" />
+              <input type="text" name="maintenance_lain" className="ml-2 w-48 rounded-md border-gray-300 shadow-sm text-sm text-black placeholder:text-gray-500" />
             </div>
           </div>
         </div>
@@ -91,16 +94,16 @@ export default function LandBuildingForm({ equipmentId }: { equipmentId: string 
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
             <div>
                 <label htmlFor="deskripsi_maintenance" className="block text-base font-semibold text-gray-800">Deskripsi Maintenance Land of Building *</label>
-                <textarea name="deskripsi_maintenance" id="deskripsi_maintenance" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                <textarea name="deskripsi_maintenance" id="deskripsi_maintenance" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black placeholder:text-gray-500"></textarea>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div>
                     <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
                 <div>
                     <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
             </div>
         </div>

@@ -28,7 +28,6 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
     if (lokasiLainValue) lokasiPekerjaan.push(`Yang lain: ${lokasiLainValue}`);
     if (kerusakanLainValue) jenisKerusakan.push(`Yang lain: ${kerusakanLainValue}`);
 
-    // Kumpulkan semua detail dari form
     const details = {
       lokasiPekerjaan: lokasiPekerjaan,
       noCompressor: formData.get('no_compressor'),
@@ -36,7 +35,7 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
       runningHours: formData.get('running_hours'),
       deskripsi: formData.get('deskripsi'),
       estimasiPengerjaan: formData.get('estimasi_pengerjaan'),
-      estimasiSelesai: formData.get('estimasi_selesai'), // Menambahkan data baru
+      estimasiSelesai: formData.get('estimasi_selesai'),
     };
 
     const finalData = {
@@ -45,7 +44,6 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
       details: details,
     };
 
-    // Kirim data ke API Route
     const response = await fetch('/api/submit-work-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -61,9 +59,8 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
     }
   };
 
-  // Opsi untuk form
   const lokasiOptions = ["PSJ", "Cikampek", "Cikande"];
-  const noCompressorOptions = ["C-001", "C-002", "C-003"]; // Contoh, idealnya dari database
+  const noCompressorOptions = ["C-001", "C-002", "C-003"];
   const kerusakanOptions = [
     "Gas Kompressor", "Gas Engine Driven or Electric Motor Driven (Included Transmition System)", "Filter Inlet",
     "Filter Outlet", "Aktuator", "Water Pump", "Motor Gas Cooler", "Transmitter",
@@ -76,7 +73,6 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
     <div className="w-full max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">01 Compressor</h1>
       <form onSubmit={handleSubmit}>
-        {/* Card Lokasi Pekerjaan */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <label className="block text-base font-semibold text-gray-800 mb-4">Lokasi Pekerjaan Kompressor *</label>
           <div className="space-y-3">
@@ -89,21 +85,21 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
             <div className="flex items-center">
               <input id="lokasi-lain-cb" name="lokasi" type="checkbox" value="Yang lain" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <label htmlFor="lokasi-lain-cb" className="ml-3 block text-sm text-gray-900">Yang lain:</label>
-              <input type="text" name="lokasi_lain" className="ml-2 w-48 rounded-md border-gray-300 shadow-sm text-sm" />
+              <input type="text" name="lokasi_lain" className="ml-2 w-48 rounded-md border-gray-300 shadow-sm text-sm text-black placeholder:text-gray-500" />
             </div>
           </div>
         </div>
 
-        {/* Card No. Compressor */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <label htmlFor="no_compressor" className="block text-base font-semibold text-gray-800">No. Compressor *</label>
-            <select name="no_compressor" id="no_compressor" required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm">
+            {/* PERBAIKAN: Menambahkan defaultValue dan text-black */}
+            <select name="no_compressor" id="no_compressor" required defaultValue="" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black">
+                {/* PERBAIKAN: Menghapus 'selected' */}
                 <option value="" disabled>--Pilih--</option>
                 {noCompressorOptions.map(no => <option key={no} value={no}>{no}</option>)}
             </select>
         </div>
 
-        {/* Card Jenis Kerusakan */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
             <label className="block text-base font-semibold text-gray-800 mb-4">Jenis Kerusakan *</label>
             <div className="space-y-3">
@@ -116,30 +112,29 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
                 <div className="flex items-center">
                     <input id="kerusakan-lain-cb" name="jenis_kerusakan" type="checkbox" value="Yang lain" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                     <label htmlFor="kerusakan-lain-cb" className="ml-3 block text-sm text-gray-900">Yang lain:</label>
-                    <input type="text" name="kerusakan_lain" className="ml-2 w-48 rounded-md border-gray-300 shadow-sm text-sm" />
+                    <input type="text" name="kerusakan_lain" className="ml-2 w-48 rounded-md border-gray-300 shadow-sm text-sm text-black placeholder:text-gray-500" />
                 </div>
             </div>
         </div>
 
-        {/* Card Running Hours, Deskripsi, dan Tanggal */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
             <div>
                 <label htmlFor="running_hours" className="block text-base font-semibold text-gray-800">Running Hours</label>
-                <input type="text" name="running_hours" id="running_hours" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                <input type="text" name="running_hours" id="running_hours" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black placeholder:text-gray-500" />
             </div>
             <div>
                 <label htmlFor="deskripsi" className="block text-base font-semibold text-gray-800">Deskripsi Maintenance Compressor *</label>
-                <textarea name="deskripsi" id="deskripsi" rows={4} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Deskripsi berisikan tipe kerusakan, jenis part equipment, atau penyebabnya..."></textarea>
+                <textarea name="deskripsi" id="deskripsi" rows={4} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black placeholder:text-gray-500" placeholder="Deskripsi berisikan tipe kerusakan, jenis part equipment, atau penyebabnya..."></textarea>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div>
                     <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
                 <div>
                     <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
             </div>
         </div>
