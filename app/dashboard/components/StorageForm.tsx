@@ -39,7 +39,6 @@ export default function StorageForm({ equipmentId }: { equipmentId: string }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(finalData),
-      
     });
 
     const result = await response.json();
@@ -51,7 +50,7 @@ export default function StorageForm({ equipmentId }: { equipmentId: string }) {
     }
   };
 
-  const storageNoOptions = ["S-01", "S-02", "S-03", "S-04"]; // Contoh, idealnya dari database
+  const storageNoOptions = ["S-01", "S-02", "S-03", "S-04"];
   const maintenanceOptions = [
     "Cover", "Cylinder", "Tubing and Fitting", "Ballvalve", "Pressure Gauge",
     "Frame", "Drain (Condensate)", "PSV (Pressure Safety Valve)",
@@ -65,8 +64,10 @@ export default function StorageForm({ equipmentId }: { equipmentId: string }) {
       <form onSubmit={handleSubmit}>
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <label htmlFor="storage_no" className="block text-base font-semibold text-gray-800">Storage No. *</label>
-          <select name="storage_no" id="storage_no" required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm">
-            <option value="" disabled selected>--Pilih--</option>
+          {/* PERBAIKAN: Menambahkan defaultValue dan text-black */}
+          <select name="storage_no" id="storage_no" required defaultValue="" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black">
+            {/* PERBAIKAN: Menghapus 'selected' */}
+            <option value="" disabled>--Pilih--</option>
             {storageNoOptions.map(no => <option key={no} value={no}>{no}</option>)}
           </select>
         </div>
@@ -83,26 +84,24 @@ export default function StorageForm({ equipmentId }: { equipmentId: string }) {
           </div>
         </div>
         
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <label htmlFor="deskripsi" className="block text-base font-semibold text-gray-800">Deskripsi Maintenance Storage *</label>
-          <textarea name="deskripsi" id="deskripsi" rows={4} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Deskripsi berisikan tipe kerusakan, jenis part equipment, spek equipment, atau penyebabnya..."></textarea>
-        </div>
-                    <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
+        {/* PERBAIKAN: Menghapus bagian yang duplikat */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
           <div>
             <label htmlFor="deskripsi" className="block text-base font-semibold text-gray-800">Deskripsi Maintenance Storage *</label>
-            <textarea name="deskripsi" id="deskripsi" rows={4} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Deskripsi berisikan tipe kerusakan, dll..."></textarea>
+            <textarea name="deskripsi" id="deskripsi" rows={4} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black placeholder:text-gray-500" placeholder="Deskripsi berisikan tipe kerusakan, dll..."></textarea>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             <div>
               <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-              <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+              <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
             </div>
             <div>
               <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-              <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+              <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
             </div>
           </div>
         </div>
+
         <div className="flex justify-end mt-6">
           <button type="submit" disabled={isLoading} className="rounded-md bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:bg-gray-400">
             {isLoading ? 'Mengirim...' : 'Kirim'}
@@ -111,6 +110,5 @@ export default function StorageForm({ equipmentId }: { equipmentId: string }) {
       </form>
       {message && <p className="mt-4 text-center font-medium text-green-600">{message}</p>}
     </div>
-    
   );
 }

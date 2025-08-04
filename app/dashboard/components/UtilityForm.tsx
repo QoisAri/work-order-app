@@ -67,8 +67,9 @@ export default function UtilityForm({ equipmentId }: { equipmentId: string }) {
 
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <label htmlFor="lokasi_utility" className="block text-base font-semibold text-gray-800">Lokasi Utility *</label>
-          <select name="lokasi_utility" id="lokasi_utility" required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm">
-            <option value="" disabled selected>--Pilih--</option>
+          {/* PERBAIKAN: Menambahkan defaultValue, text-black, dan menghapus 'selected' di bawah */}
+          <select name="lokasi_utility" id="lokasi_utility" required defaultValue="" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black">
+            <option value="" disabled>--Pilih--</option>
             {lokasiOptions.map(lokasi => <option key={lokasi} value={lokasi}>{lokasi}</option>)}
           </select>
         </div>
@@ -76,16 +77,16 @@ export default function UtilityForm({ equipmentId }: { equipmentId: string }) {
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
             <div>
                 <label htmlFor="deskripsi_utility" className="block text-base font-semibold text-gray-800">Deskripsi Utility *</label>
-                <textarea name="deskripsi_utility" id="deskripsi_utility" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                <textarea name="deskripsi_utility" id="deskripsi_utility" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black placeholder:text-gray-500"></textarea>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div>
                     <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
                 <div>
                     <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
             </div>
         </div>

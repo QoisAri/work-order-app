@@ -52,21 +52,24 @@ export default function SurveyForm({ equipmentId }: { equipmentId: string }) {
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
             <div>
                 <label htmlFor="lokasi_survey" className="block text-base font-semibold text-gray-800">Lokasi Survey *</label>
-                <input type="text" name="lokasi_survey" id="lokasi_survey" required className="mt-2 block w-full rounded-md border-gray-300 text-black shadow-sm" />
+                {/* PERBAIKAN: Menambahkan placeholder:text-gray-500 */}
+                <input type="text" name="lokasi_survey" id="lokasi_survey" required className="mt-2 block w-full rounded-md border-gray-300 text-black shadow-sm placeholder:text-gray-500" />
             </div>
             <div>
                 <label htmlFor="deskripsi_survey" className="block text-base font-semibold text-gray-800">Deskripsi Survey *</label>
                 <p className="text-sm text-gray-500">Diisi waktu survey serta alamat lengkap dan maps (jika ada)</p>
-                <textarea name="deskripsi_survey" id="deskripsi_survey" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 text-black shadow-sm"></textarea>
+                <textarea name="deskripsi_survey" id="deskripsi_survey" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 text-black shadow-sm placeholder:text-gray-500"></textarea>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div>
                     <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    {/* PERBAIKAN: Menambahkan text-black */}
+                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
                 <div>
                     <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    {/* PERBAIKAN: Menambahkan text-black */}
+                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
             </div>
         </div>

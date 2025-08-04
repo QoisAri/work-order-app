@@ -51,16 +51,19 @@ export default function OtherForm({ equipmentId }: { equipmentId: string }) {
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
             <div>
                 <label htmlFor="deskripsi" className="block text-base font-semibold text-gray-800">Deskripsi *</label>
-                <textarea name="deskripsi" id="deskripsi" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 text-black shadow-sm"></textarea>
+                {/* PERBAIKAN: Menambahkan placeholder:text-gray-500 */}
+                <textarea name="deskripsi" id="deskripsi" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 text-black shadow-sm placeholder:text-gray-500"></textarea>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div>
                     <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    {/* PERBAIKAN: Menambahkan text-black */}
+                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
                 <div>
                     <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm" />
+                    {/* PERBAIKAN: Menambahkan text-black */}
+                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
             </div>
         </div>
