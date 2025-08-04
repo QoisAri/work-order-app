@@ -116,4 +116,4 @@ export async function GET(request: NextRequest) {
     console.error("PDF Generation Error (Puppeteer):", pdfError);
     return new NextResponse(`Gagal membuat PDF: ${pdfError.message}`, { status: 500 });
   }
-}
+} 
