@@ -15,15 +15,15 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const emailTujuan = 'qoisrz5@gmail.com';
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'; // Fallback untuk local dev
+const emailTujuan = 'qoisrz5@gmail.com'; // Ganti dengan email admin/approver
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 function formatDetailsToHtml(details: Record<string, any>) {
     let tableRows = '';
     for (const key in details) {
         const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
         let value = details[key];
-        if (Array.isArray(value) && value.length > 0) {
+        if (Array.isArray(value)) {
             value = `<ul>${value.map(item => `<li>${item}</li>`).join('')}</ul>`;
         } else if (!value) {
             value = 'Tidak diisi';
@@ -47,8 +47,7 @@ export async function POST(request: Request) {
       userId = newUser.id;
     }
 
-    const { data: jobType, error: jobError } = await supabaseAdmin.from('job_types').select('nama_pekerjaan').eq('id', body.job_type_id).single();
-    if (jobError) throw new Error(`Gagal mengambil jenis pekerjaan: ${jobError.message}`);
+    const { data: jobType } = await supabaseAdmin.from('job_types').select('nama_pekerjaan').eq('id', body.job_type_id).single();
     const namaPekerjaan = jobType?.nama_pekerjaan || 'Tidak diketahui';
 
     const { data: woData, error: dbError } = await supabaseAdmin
@@ -58,22 +57,19 @@ export async function POST(request: Request) {
         sub_depart: body.sub_depart, job_type_id: body.job_type_id, equipment_id: body.equipment_id,
         status: 'pending', details: body.details, user_id: userId,
       })
-      .select()
+      .select('id')
       .single();
 
     if (dbError || !woData) {
       throw new Error(`Database Error: ${dbError?.message || 'Gagal menyimpan work order'}`);
     }
 
-    // FIX 1: Ubah 'approved' menjadi 'approve' agar sesuai dengan API handler
     const approveUrl = `${appUrl}/api/handle-approval?id=${woData.id}&action=approve`;
-    // FIX 2: Arahkan tombol Tolak ke API handler yang sama agar konsisten
-    const rejectUrl = `${appUrl}/api/handle-approval?id=${woData.id}&action=reject`;
+    const rejectUrl = `${appUrl}/reject-form?id=${woData.id}`; // Mengarah ke form penolakan
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
         <h1 style="color: #333;">Work Order Baru Diterima</h1>
-        
         <hr style="border: none; border-top: 1px solid #eee;">
         <h3 style="color: #333;">Detail Pemohon:</h3>
         <ul style="list-style-type: none; padding: 0;">
@@ -87,7 +83,7 @@ export async function POST(request: Request) {
         ${formatDetailsToHtml(body.details)}
         <hr style="border: none; border-top: 1px solid #eee;">
         <h3 style="color: #333;">Tindakan:</h3>
-        <p>Silakan setujui atau tolak permintaan Work Order ini dengan mengklik salah satu tombol di bawah ini.</p>
+        <p>Silakan setujui atau tolak permintaan Work Order ini.</p>
         <div style="margin-top: 20px;">
           <a href="${approveUrl}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: bold;">Setujui</a>
           <a href="${rejectUrl}" style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Tolak</a>
