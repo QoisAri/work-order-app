@@ -1,17 +1,24 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer'; // 1. Ganti Resend dengan Nodemailer
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// 2. Gunakan transporter Nodemailer
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_EMAIL,
+        pass: process.env.GMAIL_APP_PASSWORD,
+    },
+});
+
 const emailTujuan = 'qoisrz5@gmail.com';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-// PERBAIKAN DI SINI: Tipe diubah dari 'any' menjadi 'Record<string, any>'
 function formatDetailsToHtml(details: Record<string, any>) {
     let tableRows = '';
     for (const key in details) {
@@ -86,12 +93,13 @@ export async function POST(request: Request) {
         </div>
       </div>
     `;
-
-    await resend.emails.send({
-      from: 'Sistem Work Order <onboarding@resend.dev>',
-      to: [emailTujuan],
+    
+    // 3. Gunakan transporter.sendMail untuk mengirim email
+    await transporter.sendMail({
+      from: `"Sistem Work Order" <${process.env.GMAIL_EMAIL}>`,
+      to: emailTujuan,
       cc: body.email,
-      subject: `[WORK ORDER BARU] untuk ${body.details.noCompressor || 'Peralatan'}`,
+      subject: `[WORK ORDER BARU] untuk ${body.details?.noCompressor || 'Peralatan'}`,
       html: emailHtml,
     });
 

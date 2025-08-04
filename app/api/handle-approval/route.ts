@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { type NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer'; // Impor nodemailer
+import nodemailer from 'nodemailer'; // 1. Ganti Resend dengan Nodemailer
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,7 +8,7 @@ const supabaseAdmin = createClient(
 );
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-// Konfigurasi "pengirim email" menggunakan Nodemailer dan Gmail
+// 2. Konfigurasi transporter untuk Nodemailer menggunakan akun Gmail Anda
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -29,19 +29,26 @@ export async function GET(request: NextRequest) {
 
   try {
     await supabaseAdmin.from('work_orders').update({ status: 'approved' }).eq('id', id);
+
     const { data: workOrder } = await supabaseAdmin.from('work_orders').select('*, equipments(nama_equipment)').eq('id', id).single();
-    
     if (workOrder) {
         const emailHtml = `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
                 <h1 style="color: #28a745;">Work Order Anda Telah Disetujui!</h1>
                 <p>Halo <strong>${workOrder.nama_pemohon}</strong>,</p>
-                <p>Permintaan Work Order Anda telah disetujui dan akan segera diproses.</p>
-                <p><strong>ID Work Order:</strong> ${workOrder.id}</p>
+                <p>Permintaan Work Order Anda dengan detail di bawah ini telah disetujui dan akan segera diproses.</p>
+                <hr style="border: none; border-top: 1px solid #eee;">
+                <h3 style="color: #333;">Detail Permintaan:</h3>
+                <ul style="list-style-type: none; padding: 0;">
+                  <li><strong>ID Work Order:</strong> ${workOrder.id}</li>
+                  <li><strong>Equipment:</strong> ${workOrder.equipments.nama_equipment}</li>
+                  <li><strong>Deskripsi:</strong> ${workOrder.details.deskripsi || workOrder.details.deskripsiMaintenance || workOrder.details.deskripsiSafetyEquipment || 'Tidak ada deskripsi'}</li>
+                </ul>
+                <p style="margin-top: 20px;">Terima kasih.</p>
               </div>
             `;
         
-        // Gunakan transporter.sendMail untuk mengirim email
+        // 3. Gunakan transporter.sendMail untuk mengirim email
         await transporter.sendMail({
           from: `"Sistem Work Order" <${process.env.GMAIL_EMAIL}>`,
           to: workOrder.email_pemohon,
@@ -72,14 +79,15 @@ export async function POST(request: NextRequest) {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
             <h1 style="color: #dc3545;">Work Order Anda Ditolak</h1>
             <p>Halo <strong>${workOrder.nama_pemohon}</strong>,</p>
-            <p>Mohon maaf, permintaan Work Order Anda dengan ID <strong>${id}</strong> telah ditolak dengan alasan:</p>
+            <p>Mohon maaf, permintaan Work Order Anda dengan ID <strong>${id}</strong> telah ditolak dengan alasan sebagai berikut:</p>
             <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin-top: 15px;">
               <p style="margin: 0;"><em>${reason}</em></p>
             </div>
+            <p style="margin-top: 20px;">Silakan hubungi administrator jika Anda memiliki pertanyaan.</p>
           </div>
         `;
         
-        // Gunakan transporter.sendMail untuk mengirim email
+        // 3. Gunakan transporter.sendMail untuk mengirim email
         await transporter.sendMail({
           from: `"Sistem Work Order" <${process.env.GMAIL_EMAIL}>`,
           to: workOrder.email_pemohon,
