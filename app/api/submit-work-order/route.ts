@@ -16,7 +16,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const emailTujuan = 'qoisrz5@gmail.com';
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'; // Fallback untuk local dev
 
 function formatDetailsToHtml(details: Record<string, any>) {
     let tableRows = '';
@@ -54,11 +54,10 @@ export async function POST(request: Request) {
     const { data: woData, error: dbError } = await supabaseAdmin
       .from('work_orders')
       .insert({
-        // wo_number tidak diisi di sini
         nama_pemohon: body.nama, email_pemohon: body.email, no_wa_pemohon: body.no_wa,
         sub_depart: body.sub_depart, job_type_id: body.job_type_id, equipment_id: body.equipment_id,
         status: 'pending', details: body.details, user_id: userId,
-       })
+      })
       .select()
       .single();
 
@@ -66,13 +65,15 @@ export async function POST(request: Request) {
       throw new Error(`Database Error: ${dbError?.message || 'Gagal menyimpan work order'}`);
     }
 
-    const approveUrl = `${appUrl}/api/handle-approval?id=${woData.id}&action=approved`;
-    const rejectUrl = `${appUrl}/reject-form?id=${woData.id}`;
+    // FIX 1: Ubah 'approved' menjadi 'approve' agar sesuai dengan API handler
+    const approveUrl = `${appUrl}/api/handle-approval?id=${woData.id}&action=approve`;
+    // FIX 2: Arahkan tombol Tolak ke API handler yang sama agar konsisten
+    const rejectUrl = `${appUrl}/api/handle-approval?id=${woData.id}&action=reject`;
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
         <h1 style="color: #333;">Work Order Baru Diterima</h1>
-        <p><strong>ID Work Order (Sementara):</strong> ${woData.id}</p>
+        
         <hr style="border: none; border-top: 1px solid #eee;">
         <h3 style="color: #333;">Detail Pemohon:</h3>
         <ul style="list-style-type: none; padding: 0;">
