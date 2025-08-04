@@ -53,27 +53,25 @@ export async function POST(request: Request) {
 
     // --- BLOK BARU: GENERATE WO NUMBER ---
     const now = new Date();
-    const year = now.getFullYear();
+    const year = now.getFullYear().toString().slice(-2); // UBAH: Mengambil 2 digit terakhir tahun (25)
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const prefix = `${year}-${month}`;
+    const prefix = `${year}/${month}`; // UBAH: Menggunakan format YY/MM
 
-    // 1. Cari WO terakhir di bulan ini
     const { data: lastWo } = await supabaseAdmin
       .from('work_orders')
       .select('wo_number')
-      .like('wo_number', `${prefix}-%`)
+      .like('wo_number', `${prefix}/%`) // UBAH: Mencari dengan format baru
       .order('wo_number', { ascending: false })
       .limit(1)
       .single();
 
     let newSequence = 1;
     if (lastWo) {
-      const lastSequence = parseInt(lastWo.wo_number.split('-')[2], 10);
+      const lastSequence = parseInt(lastWo.wo_number.split('/')[2], 10); // UBAH: Memisahkan dengan '/'
       newSequence = lastSequence + 1;
     }
     
-    // 2. Buat nomor WO baru dengan format 3 digit
-    const newWoNumber = `${prefix}-${newSequence.toString().padStart(3, '0')}`;
+    const newWoNumber = `${prefix}/${newSequence.toString().padStart(3, '0')}`;
     // --- AKHIR BLOK BARU ---
 
 
