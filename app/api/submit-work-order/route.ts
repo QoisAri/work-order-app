@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const emailTujuan = 'cngworkshop25@gmail.com';
+const emailTujuan = 'qoisrz5@gmail.com';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 function formatDetailsToHtml(details: Record<string, any>) {
@@ -51,34 +51,10 @@ export async function POST(request: Request) {
     if (jobError) throw new Error(`Gagal mengambil jenis pekerjaan: ${jobError.message}`);
     const namaPekerjaan = jobType?.nama_pekerjaan || 'Tidak diketahui';
 
-    // --- BLOK BARU: GENERATE WO NUMBER ---
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2); // UBAH: Mengambil 2 digit terakhir tahun (25)
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const prefix = `${year}/${month}`; // UBAH: Menggunakan format YY/MM
-
-    const { data: lastWo } = await supabaseAdmin
-      .from('work_orders')
-      .select('wo_number')
-      .like('wo_number', `${prefix}/%`) // UBAH: Mencari dengan format baru
-      .order('wo_number', { ascending: false })
-      .limit(1)
-      .single();
-
-    let newSequence = 1;
-    if (lastWo) {
-      const lastSequence = parseInt(lastWo.wo_number.split('/')[2], 10); // UBAH: Memisahkan dengan '/'
-      newSequence = lastSequence + 1;
-    }
-    
-    const newWoNumber = `${prefix}/${newSequence.toString().padStart(3, '0')}`;
-    // --- AKHIR BLOK BARU ---
-
-
     const { data: woData, error: dbError } = await supabaseAdmin
       .from('work_orders')
       .insert({
-        wo_number: newWoNumber, // <-- SIMPAN NOMOR WO BARU
+        // wo_number tidak diisi di sini
         nama_pemohon: body.nama, email_pemohon: body.email, no_wa_pemohon: body.no_wa,
         sub_depart: body.sub_depart, job_type_id: body.job_type_id, equipment_id: body.equipment_id,
         status: 'pending', details: body.details, user_id: userId,
@@ -96,10 +72,7 @@ export async function POST(request: Request) {
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
         <h1 style="color: #333;">Work Order Baru Diterima</h1>
-        
-        {/* --- UBAH DARI ID MENJADI NOMOR WO --- */}
-        <p><strong>Nomor Work Order:</strong> ${newWoNumber}</p>
-        
+        <p><strong>ID Work Order (Sementara):</strong> ${woData.id}</p>
         <hr style="border: none; border-top: 1px solid #eee;">
         <h3 style="color: #333;">Detail Pemohon:</h3>
         <ul style="list-style-type: none; padding: 0;">
@@ -124,7 +97,7 @@ export async function POST(request: Request) {
     await transporter.sendMail({
       from: `"Sistem Work Order" <${process.env.GMAIL_EMAIL}>`,
       to: emailTujuan,
-      subject: `[WORK ORDER BARU] ${newWoNumber}`,
+      subject: `[WORK ORDER BARU] Permintaan Baru`,
       html: emailHtml,
     });
 
