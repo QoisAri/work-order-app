@@ -60,7 +60,7 @@ export default function CompressorForm({ equipmentId }: { equipmentId: string })
   };
 
   const lokasiOptions = ["PSJ", "Cikampek", "Cikande"];
-  const noCompressorOptions = ["C-001", "C-002", "C-003"];
+  const noCompressorOptions = ["CBG 1(PSJ)", "CBG 2(PSJ)", "CBG 3(CKP)", "CBG 4(CKP)", "CBG 5(CKD)", "CBG 6(CKD)", "MRU 1", "MRU 2", "IMW 1(CKP)", "IMW 2(CKP)"];
   const kerusakanOptions = [
     "Gas Kompressor", "Gas Engine Driven or Electric Motor Driven (Included Transmition System)", "Filter Inlet",
     "Filter Outlet", "Aktuator", "Water Pump", "Motor Gas Cooler", "Transmitter",

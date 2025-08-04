@@ -46,7 +46,7 @@ export default function SafetyEquipmentForm({ equipmentId }: { equipmentId: stri
     }
   };
 
-  const lokasiOptions = ["Lokasi A", "Lokasi B", "Lokasi C"];
+  const lokasiOptions = ["Ms. Cikampek", "Ms. Cikande", "Ms. PSJ", "Head Office"];
   const jenisEquipmentOptions = [
     "APAR", "Hydrant", "Emergency Exit Sign", "First Aid Box (P3K)",
     "Fire Alarm System", "Gas Detector"

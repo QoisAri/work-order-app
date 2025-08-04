@@ -50,7 +50,22 @@ export default function StorageForm({ equipmentId }: { equipmentId: string }) {
     }
   };
 
-  const storageNoOptions = ["S-01", "S-02", "S-03", "S-04"];
+  // --- PERUBAHAN DI SINI ---
+  const storageNoOptions = [
+    "107 (20 ft)", "108 (20 ft)",
+    "109 (20 ft)", "110 (20 ft)", "111 (20 ft)", "112 (20 ft)", "113 (20 ft)", "115 (20 ft)", "118 (20 ft)",
+    "119 (20 ft)", "201 (20 ft)", "203 (20 ft)", "303 (20 ft)", "304 (20 ft)", "305 (20 ft)", "306 (20 ft)",
+    "307 (20 ft)", "308 (20 ft)", "501 (20 ft)", "502 (20 ft)", "503 (20 ft)", "504 (20 ft)", "505 (20 ft)",
+    "506 (20 ft)", "507 (20 ft)", "508 (20 ft)", "509 (20 ft)", "510 (20 ft)", "511 (20 ft)", "512 (20 ft)",
+    "1001 (10 ft)", "1002 (10 ft)", "1004 (10 ft)", "1005 (10 ft)", "1007 (10 ft)", "1008 (10 ft)", "1010 (10 ft)",
+    "1011 (10 ft)", "1012 (10 ft)", "1013 (10 ft)", "1014 (10 ft)", "1015 (10 ft)", "1016 (10 ft)", "1017 (10 ft)",
+    "1018 (10 ft)", "1019 (10 ft)", "1020 (10 ft)", "1021 (10 ft)", "2001 (10 ft)", "2002 (10 ft)", "2003 (10 ft)",
+    "2004 (10 ft)", "3001 (10 ft)", "3002 (10 ft)", "3003 (10 ft)", "3004 (10 ft)", "6001 (10 ft)", "6002 (10 ft)",
+    "6003 (10 ft)", "6004 (10 ft)", "EK01 (40 ft)", "EK02 (40 ft)", "EK03 (40 ft)", "EK04 (40 ft)",
+    "MX01 (20 ft)", "MX02 (20 ft)", "KR01 (20 ft)"
+  ];
+  // --- AKHIR PERUBAHAN ---
+  
   const maintenanceOptions = [
     "Cover", "Cylinder", "Tubing and Fitting", "Ballvalve", "Pressure Gauge",
     "Frame", "Drain (Condensate)", "PSV (Pressure Safety Valve)",
@@ -64,9 +79,7 @@ export default function StorageForm({ equipmentId }: { equipmentId: string }) {
       <form onSubmit={handleSubmit}>
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <label htmlFor="storage_no" className="block text-base font-semibold text-gray-800">Storage No. *</label>
-          {/* PERBAIKAN: Menambahkan defaultValue dan text-black */}
           <select name="storage_no" id="storage_no" required defaultValue="" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black">
-            {/* PERBAIKAN: Menghapus 'selected' */}
             <option value="" disabled>--Pilih--</option>
             {storageNoOptions.map(no => <option key={no} value={no}>{no}</option>)}
           </select>
@@ -84,7 +97,6 @@ export default function StorageForm({ equipmentId }: { equipmentId: string }) {
           </div>
         </div>
         
-        {/* PERBAIKAN: Menghapus bagian yang duplikat */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
           <div>
             <label htmlFor="deskripsi" className="block text-base font-semibold text-gray-800">Deskripsi Maintenance Storage *</label>

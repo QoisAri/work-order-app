@@ -56,7 +56,26 @@ export default function MrsForm({ equipmentId }: { equipmentId: string }) {
     }
   };
 
-  const nomorMrsOptions = ["MRS-01", "MRS-02", "MRS-03"];
+  // --- PERUBAHAN DI SINI ---
+  const nomorMrsOptions = [
+    "001 (300 Nm3/h)", "003 (300 Nm3/h)", "005 (200 Nm3/h)", "006 (150 Nm3/h)",
+    "007 (250 Nm3/h)", "008 (300 Nm3/h)", "009 (500 Nm3/h)", "010 (150 Nm3/h)",
+    "011 (1500 Nm3/h)", "012 (1500 Nm3/h)", "015 (1500 Nm3/h)", "016 (1500 Nm3/h)",
+    "017 (1000 Nm3/h)", "018 (1000 Nm3/h)", "019 (1000 Nm3/h)", "020 (500 Nm3/h)",
+    "021 (1000 Nm3/h)", "022 (1000 Nm3/h)", "023 (600 Nm3/h)", "024 (500 Nm3/h)",
+    "025 (1000 Nm3/h)", "026 (1000 Nm3/h)", "027 (1000 Nm3/h)", "028 (1000 Nm3/h)",
+    "029 (1000 Nm3/h)", "030 (1000 Nm3/h)", "031 (1000 Nm3/h)", "032 (1000 Nm3/h)",
+    "033 (1000 Nm3/h)", "034 (1000 Nm3/h)", "035 (1000 Nm3/h)", "036 (300 Nm3/h)",
+    "037 (300 Nm3/h)", "038 (300 Nm3/h)", "039 (300 Nm3/h)", "040 (300 Nm3/h)",
+    "041 (300 Nm3/h)", "042 (300 Nm3/h)", "043 (300 Nm3/h)", "044 (300 Nm3/h)",
+    "045 (300 Nm3/h)", "046 (300 Nm3/h)", "047 (300 Nm3/h)", "052 (300 Nm3/h)",
+    "053 (300 Nm3/h)", "054 (300 Nm3/h)", "055 (300 Nm3/h)", "056 (300 Nm3/h)",
+    "057 (300 Nm3/h)", "058 (300 Nm3/h)", "059 (300 Nm3/h)", "060 (300 Nm3/h)",
+    "061 (300 Nm3/h)", "062 (1500 Nm3/h)", "063 (1500 Nm3/h)", "064 (150 Nm3/h)",
+    "065 (100 Nm3/h)", "066 (100 Nm3/h)", "067 (100 Nm3/h)"
+  ];
+  // --- AKHIR PERUBAHAN ---
+
   const kerusakanOptions = [
     "Scrubber", "Filter", "Aktuator", "Flow Meter", "Tubing and Instrumentation",
     "Piping line", "Regulator", "PSV", "Ball Valve", "Pressure Gauge",
@@ -70,9 +89,7 @@ export default function MrsForm({ equipmentId }: { equipmentId: string }) {
       <form onSubmit={handleSubmit}>
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <label htmlFor="nomor_mrs" className="block text-base font-semibold text-gray-800">Nomor MRS *</label>
-          {/* PERBAIKAN: Menambahkan defaultValue dan text-black */}
           <select name="nomor_mrs" id="nomor_mrs" required defaultValue="" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black">
-            {/* PERBAIKAN: Menghapus 'selected' */}
             <option value="" disabled>--Pilih--</option>
             {nomorMrsOptions.map(no => <option key={no} value={no}>{no}</option>)}
           </select>
@@ -101,7 +118,6 @@ export default function MrsForm({ equipmentId }: { equipmentId: string }) {
           </div>
         </div>
         
-        {/* PERBAIKAN: Menghapus bagian yang duplikat */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6 space-y-4">
             <div>
                 <label htmlFor="deskripsi_maintenance" className="block text-base font-semibold text-gray-800">Deskripsi Maintenance *</label>
