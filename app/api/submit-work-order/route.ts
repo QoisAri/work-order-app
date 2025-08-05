@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const emailTujuan = 'qoisrz5@gmail.com'; // Ganti dengan email admin/approver
+const emailTujuan = 'cngworkshop25@gmail.com'; // Ganti dengan email admin/approver
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 function formatDetailsToHtml(details: Record<string, any>) {
