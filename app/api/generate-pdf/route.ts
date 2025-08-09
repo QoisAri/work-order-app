@@ -1,24 +1,30 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/server';
 import { type NextRequest, NextResponse } from 'next/server';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 export async function GET(request: NextRequest) {
+  const supabase = createClient();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
-  if (!id) return new NextResponse('ID tidak ditemukan', { status: 400 });
+  if (!id) {
+    return new NextResponse('ID tidak ditemukan', { status: 400 });
+  }
 
-  const { data: wo, error } = await supabaseAdmin.from('work_orders').select('*, equipments!inner(*), job_types!inner(*)').eq('id', id).single();
+  const { data: wo, error } = await supabase
+    .from('work_orders')
+    .select('*, equipments!inner(*), job_types!inner(*)')
+    .eq('id', id)
+    .single();
 
-  if (error || !wo) return new NextResponse(`Work Order tidak ditemukan: ${error?.message}`, { status: 404 });
+  if (error || !wo) {
+    return new NextResponse(`Work Order tidak ditemukan: ${error?.message}`, { status: 404 });
+  }
   
-  if (wo.status !== 'approved' || !wo.wo_number) return new NextResponse('Dokumen ini belum disetujui.', { status: 403 });
+  if (wo.status !== 'approved' || !wo.wo_number) {
+    return new NextResponse('Dokumen ini belum disetujui atau belum memiliki nomor WO.', { status: 403 });
+  }
 
   const htmlContent = `
     <style>
@@ -39,10 +45,10 @@ export async function GET(request: NextRequest) {
             <div class="header-center"><strong>WORK ORDER</strong><br>MAINTENANCE & ENGINEERING</div>
             <div class="header-right">
                 <table>
-                    <tr><td>No</td><td>FR.IV.ENG.001</td></tr>
-                    <tr><td>Tgl</td><td>${new Date(wo.approved_at).toLocaleDateString('id-ID')}</td></tr>
-                    <tr><td>Rev</td><td>Rev-04</td></tr>
-                    <tr><td>Hal</td><td>Halaman 1 dari 1</td></tr>
+                    <tr><td>No</td><td>: FR.IV.ENG.001</td></tr>
+                    <tr><td>Tgl</td><td>: ${new Date().toLocaleDateString('id-ID')}</td></tr>
+                    <tr><td>Rev</td><td>: Rev-04</td></tr>
+                    <tr><td>Hal</td><td>: Halaman 1 dari 1</td></tr>
                 </table>
             </div>
         </div>
@@ -58,6 +64,8 @@ export async function GET(request: NextRequest) {
                 </tr>
                 <tr><td>Work</td><td>: ${wo.equipments.nama_equipment || ''}</td></tr>
                 <tr><td>Type Work</td><td>: ${wo.job_types.nama_pekerjaan || ''}</td></tr>
+                <tr><td>Estimate Time Executed</td><td>: ${wo.details.estimasiPengerjaan ? new Date(wo.details.estimasiPengerjaan).toLocaleDateString('id-ID') : '-'}</td></tr>
+                <tr><td>Estimate Time Finished</td><td>: ${wo.details.estimasiSelesai ? new Date(wo.details.estimasiSelesai).toLocaleDateString('id-ID') : '-'}</td></tr>
             </table>
         </div>
     </body>
@@ -65,23 +73,22 @@ export async function GET(request: NextRequest) {
 
   let browser = null;
   try {
-    // --- PENGATURAN BARU YANG SUDAH DIPERBAIKI ---
-    // Kita hanya perlu memberikan argumen dan path executable-nya saja.
-    // Opsi lain yang menyebabkan error sudah dihapus.
     browser = await puppeteer.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
+      headless: true,
     });
 
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    const fileBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '40px', right: '40px', bottom: '40px', left: '40px' } });
+    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '40px', right: '40px', bottom: '40px', left: '40px' } });
 
     const headers = new Headers();
     headers.append('Content-Type', 'application/pdf');
     headers.append('Content-Disposition', `attachment; filename="WO-${wo.wo_number}.pdf"`);
 
-    return new NextResponse(fileBuffer, { status: 200, headers: headers });
+    // PERBAIKAN: Secara eksplisit membuat Buffer dari hasil pdf
+    return new NextResponse(Buffer.from(pdfBuffer), { status: 200, headers: headers });
 
   } catch (pdfError: any) {
     console.error("PDF Generation Error (Puppeteer):", pdfError);
