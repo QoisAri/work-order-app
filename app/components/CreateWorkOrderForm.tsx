@@ -86,8 +86,8 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         <select name="sub_depart" id="sub_depart" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
           <option value="">Pilih Departemen...</option>
           {/* Contoh mapping, sesuaikan dengan data Anda */}
-          {departments.map(dept => (
-            <option key={dept.id} value={dept.nama_depart}>{dept.nama_depart}</option>
+        {departments.map(dept => (
+        <option key={dept.id} value={dept.nama_depart}>{dept.nama_depart}</option>
           ))}
         </select>
       </div>
