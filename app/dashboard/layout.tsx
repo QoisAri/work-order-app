@@ -1,44 +1,39 @@
-'use client';
+import DashboardClient from './components/DashboardClient'; // Impor komponen client baru
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+import type { CookieOptions } from '@supabase/ssr';
 
-import { useState } from 'react';
-import Sidebar from "./components/sidebar";
-import MenuButton from './components/MenuButton';
-
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const cookieStore = cookies()
 
-  const closeSidebar = () => {
-    setIsSidebarOpen(false);
-  };
+  // Buat Supabase client di server
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+      } as CookieOptions,
+    }
+  )
 
+  // Ambil data user dan equipment di server
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: equipments } = await supabase
+    .from('equipments')
+    .select('id, nama_equipment')
+    .order('nama_equipment', { ascending: true });
+
+  // Render komponen client dan kirim semua data yang dibutuhkan sebagai props
   return (
-    // PERBAIKAN DI SINI: ganti 'min-h-screen' menjadi 'h-screen' dan tambahkan 'overflow-hidden'
-    <div className="relative flex h-screen bg-gray-100 overflow-hidden">
-      {isSidebarOpen && (
-        <div 
-          className="md:hidden fixed inset-0 bg-black opacity-50 z-10"
-          onClick={closeSidebar}
-        ></div>
-      )}
-
-      {/* Sidebar */}
-      <div 
-        className={`fixed inset-y-0 left-0 transform ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-20 w-64`}
-      >
-        <Sidebar closeSidebar={closeSidebar} />
-      </div>
-
-      {/* Konten Utama */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <MenuButton onClick={() => setIsSidebarOpen(!isSidebarOpen)} />
-        {children}
-      </main>
-    </div>
+    <DashboardClient user={user} equipments={equipments || []}>
+      {children}
+    </DashboardClient>
   );
 }

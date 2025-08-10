@@ -1,75 +1,69 @@
 'use client';
 
-import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { LogoutButton } from '@/app/components/LogoutButton';
+import type { User } from '@supabase/supabase-js'; // Impor tipe User untuk TypeScript
 
-// Definisikan tipe data untuk props, termasuk fungsi untuk menutup sidebar
-type SidebarProps = {
-  closeSidebar?: () => void; // Fungsi ini opsional
-};
-
+// Definisikan tipe untuk data equipment
 type Equipment = {
   id: string;
   nama_equipment: string;
 };
 
-export default function Sidebar({ closeSidebar }: SidebarProps) {
-  const [isGuest, setIsGuest] = useState(true);
-  const [equipments, setEquipments] = useState<Equipment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+// Perbarui SidebarProps untuk menerima 'user' dan 'equipments' dari server
+type SidebarProps = {
+  closeSidebar?: () => void; // Fungsi opsional untuk mobile
+  user: User | null;
+  equipments: Equipment[];
+};
 
-  useEffect(() => {
-    const userInfo = sessionStorage.getItem('workOrderUserInfo');
-    setIsGuest(!userInfo);
-
-    const fetchEquipments = async () => {
-      setIsLoading(true);
-      const { data } = await supabase.from('equipments').select('*').order('nama_equipment', { ascending: true });
-      setEquipments(data || []);
-      setIsLoading(false);
-    };
-    
-    if (!userInfo) {
-      setIsLoading(false);
-      return;
-    }
-
-    fetchEquipments();
-  }, []);
+export default function Sidebar({ closeSidebar, user, equipments }: SidebarProps) {
+  // Status login sekarang ditentukan langsung dari prop 'user'.
+  const isGuest = !user;
 
   const handleLinkClick = () => {
-    // Jika fungsi closeSidebar diberikan (hanya terjadi di mobile), jalankan
+    // Fungsi ini tetap berguna untuk menutup sidebar di tampilan mobile
     if (closeSidebar) {
       closeSidebar();
     }
   };
 
   return (
-    // Tambahkan kelas h-full dan overflow-y-auto untuk memastikan sidebar bisa di-scroll penuh
     <aside className="w-64 flex-shrink-0 bg-gray-800 p-4 text-white flex flex-col h-full overflow-y-auto">
       <h1 className="text-xl font-bold mb-6">WO System</h1>
       
       {isGuest ? (
+        // Tampilan untuk Tamu (Guest)
         <div className="text-center bg-gray-700 p-4 rounded-md">
-          <p>Anda adalah Tamu.</p>
-          <Link href="/" className="inline-block mt-4 text-indigo-400 hover:text-indigo-300">
-            &larr; Kembali
+          <p className="mb-2">Harap login untuk membuat work order.</p>
+          <Link 
+            href="/login" 
+            onClick={handleLinkClick} 
+            className="font-bold text-indigo-400 hover:text-indigo-300"
+          >
+            Pergi ke Halaman Login &rarr;
           </Link>
         </div>
       ) : (
-        <nav className="flex-grow">
-          <h2 className="text-xs font-semibold uppercase text-gray-400 mb-2">Pilih Equipment</h2>
-          {isLoading ? (
-            <p className="text-gray-400">Memuat...</p>
-          ) : (
+        // Tampilan untuk Pengguna yang Sudah Login
+        <>
+          {/* Menampilkan informasi user */}
+          <div className='mb-4 p-2 bg-gray-900 rounded-md'>
+            <p className='text-xs text-gray-400'>Login sebagai:</p>
+            <p className='text-sm font-medium truncate' title={user.email || ''}>
+              {user.email}
+            </p>
+          </div>
+
+          {/* Navigasi utama */}
+          <nav className="flex-grow">
+            <h2 className="text-xs font-semibold uppercase text-gray-400 mb-2">Pilih Equipment</h2>
             <ul>
               {equipments.map(eq => (
                 <li key={eq.id}>
-                  {/* --- PERUBAHAN DI SINI --- */}
                   <Link 
                     href={`/dashboard/create/${eq.id}`} 
-                    onClick={handleLinkClick} // Tambahkan onClick di sini
+                    onClick={handleLinkClick}
                     className="block py-2 px-2 rounded-md hover:bg-gray-700 transition-colors duration-200"
                   >
                     {eq.nama_equipment}
@@ -77,8 +71,13 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
                 </li>
               ))}
             </ul>
-          )}
-        </nav>
+          </nav>
+
+          {/* Tombol Logout di bagian bawah */}
+          <div className="mt-auto pt-4 border-t border-gray-700">
+            <LogoutButton />
+          </div>
+        </>
       )}
     </aside>
   );
