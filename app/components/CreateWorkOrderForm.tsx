@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 // Asumsi Anda punya tipe data ini dari database
 type JobType = { id: string; nama_pekerjaan: string };
-type Department = { id: string; nama_depart: string };
+type Department = { id: string; nama_departemen: string };
 
 // Props untuk menerima data dropdown dari server
 type FormProps = {
@@ -87,7 +87,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
           <option value="">Pilih Departemen...</option>
           {/* Contoh mapping, sesuaikan dengan data Anda */}
         {departments.map(dept => (
-        <option key={dept.id} value={dept.nama_depart}>{dept.nama_depart}</option>
+        <option key={dept.id} value={dept.nama_departemen}>{dept.nama_departemen}</option>
           ))}
         </select>
       </div>
