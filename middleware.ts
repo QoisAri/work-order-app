@@ -8,7 +8,14 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Gunakan matcher dari kode lama Anda
-    '/((?!_next/static|_next/image|favicon.ico|auth).*)',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - auth (jika Anda punya route otentikasi khusus)
+     */
+    '/((?!api|_next/static|_next/image|auth|favicon.ico).*)',
   ],
 }
