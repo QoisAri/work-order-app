@@ -1,5 +1,4 @@
-// utils/supabase/middleware.ts
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
@@ -18,13 +17,11 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.get(name)?.value
         },
         set(name: string, value: string, options) {
-          // ... (kode ini tetap sama)
           request.cookies.set({ name, value, ...options })
           response = NextResponse.next({ request: { headers: request.headers } })
           response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options) {
-          // ... (kode ini tetap sama)
           request.cookies.set({ name, value: '', ...options })
           response = NextResponse.next({ request: { headers: request.headers } })
           response.cookies.set({ name, value: '', ...options })
@@ -33,44 +30,57 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Ambil data user saat ini
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // --- MULAI LOGIKA LAMA ANDA ---
+  // Halaman yang bisa diakses publik tanpa login
+  // Halaman submit-work-order adalah tempat user melengkapi profil
+  const publicPages = ['/login', '/submit-work-order'];
 
-  // 1. Jika user belum login, arahkan ke halaman login
-  if (!user && pathname !== '/login') {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // Jika user belum login dan mencoba akses halaman yang dilindungi
+  if (!user && !publicPages.includes(pathname) && !pathname.startsWith('/auth')) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
   
-  // 2. Jika user sudah login
+  // Jika user sudah login
   if (user) {
-    // Arahkan dari halaman login ke home jika sudah login
+    // Jika sudah login tapi masih di halaman login, arahkan ke halaman utama
     if (pathname === '/login') {
-      return NextResponse.redirect(new URL('/', request.url))
+      return NextResponse.redirect(new URL('/', request.url));
     }
     
-    // Ambil role dari tabel 'profiles'
+    // Ambil status kelengkapan profil dan role dari tabel 'profiles'
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('is_profile_complete, role')
       .eq('id', user.id)
-      .single()
+      .single();
 
-    const userRole = profile?.role
-
-    // Arahkan berdasarkan role
-    if ((userRole === 'admin' || userRole === 'engineer') && !pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/admin', request.url))
+    // LOGIKA PROFIL:
+    // Jika profil belum lengkap DAN user tidak sedang di halaman untuk melengkapi profil,
+    // paksa user ke halaman tersebut.
+    if (profile && !profile.is_profile_complete && pathname !== '/submit-work-order') {
+      return NextResponse.redirect(new URL('/submit-work-order', request.url));
     }
+    
+    // Jika profil SUDAH lengkap DAN user mencoba kembali ke halaman profil,
+    // arahkan ke dasbor utama.
+    if (profile && profile.is_profile_complete && pathname === '/submit-work-order') {
+       return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    // LOGIKA ROLE:
+    const userRole = profile?.role;
+    // Jika admin/engineer tapi tidak di halaman admin, arahkan ke /admin
+    if ((userRole === 'admin' || userRole === 'engineer') && !pathname.startsWith('/admin')) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+    // Jika pemohon mencoba akses halaman admin, tendang ke halaman utama
     if (userRole === 'pemohon' && pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/', request.url)) // Cegah pemohon akses admin
+      return NextResponse.redirect(new URL('/', request.url));
     }
   }
 
-  // --- SELESAI LOGIKA LAMA ANDA ---
-
-  // Jika tidak ada kondisi redirect yang terpenuhi, lanjutkan request seperti biasa
+  // Lanjutkan request jika tidak ada kondisi redirect yang terpenuhi
   return response
 }

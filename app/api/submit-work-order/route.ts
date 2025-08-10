@@ -1,107 +1,73 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
 
+// Gunakan SERVICE_ROLE_KEY agar bisa melewati RLS untuk membuat user/profil
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.GMAIL_EMAIL,
-        pass: process.env.GMAIL_APP_PASSWORD,
-    },
-});
-
-const emailTujuan = 'cngworkshop25@gmail.com'; // Ganti dengan email admin/approver
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-
-function formatDetailsToHtml(details: Record<string, any>) {
-    let tableRows = '';
-    for (const key in details) {
-        const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-        let value = details[key];
-        if (Array.isArray(value)) {
-            value = `<ul>${value.map(item => `<li>${item}</li>`).join('')}</ul>`;
-        } else if (!value) {
-            value = 'Tidak diisi';
-        }
-        tableRows += `<tr><td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; font-weight: bold; text-transform: capitalize;">${formattedKey}</td><td style="padding: 8px; border: 1px solid #ddd;">${value}</td></tr>`;
-    }
-    return `<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">${tableRows}</table>`;
-}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     let userId: string;
 
-    const { data: existingUser } = await supabaseAdmin.from('users').select('id').eq('email', body.email).single();
-    if (existingUser) {
-      userId = existingUser.id;
+    // Cek apakah user sudah ada di tabel 'users' Supabase Auth
+    const { data: { user } } = await supabaseAdmin.auth.getUser(body.access_token); // Asumsi token dikirim dari client
+
+    if (user) {
+        userId = user.id;
     } else {
-      const { data: newUser } = await supabaseAdmin.from('users').insert({ nama_lengkap: body.nama, email: body.email, sub_depart: body.sub_depart, role: 'pemohon' }).select('id').single();
-      if (!newUser) throw new Error('Gagal membuat user baru.');
-      userId = newUser.id;
+        // Jika tidak ada user (misalnya pendaftaran pertama), buat user baru
+        // Ini adalah skenario fallback jika user belum terotentikasi saat submit
+        const { data: newUser, error: userError } = await supabaseAdmin.auth.signUp({
+            email: body.email,
+            password: 'generate-a-secure-password-here', // Anda perlu strategi password di sini
+            options: {
+                data: {
+                    nama_lengkap: body.nama,
+                    sub_depart: body.sub_depart,
+                }
+            }
+        });
+
+        if (userError || !newUser.user) throw new Error(userError?.message || 'Gagal membuat user baru di Auth.');
+        userId = newUser.user.id;
     }
 
-    const { data: jobType } = await supabaseAdmin.from('job_types').select('nama_pekerjaan').eq('id', body.job_type_id).single();
-    const namaPekerjaan = jobType?.nama_pekerjaan || 'Tidak diketahui';
-
-    const { data: woData, error: dbError } = await supabaseAdmin
+    // Masukkan data Work Order ke database
+    const { error: woError } = await supabaseAdmin
       .from('work_orders')
       .insert({
-        nama_pemohon: body.nama, email_pemohon: body.email, no_wa_pemohon: body.no_wa,
-        sub_depart: body.sub_depart, job_type_id: body.job_type_id, equipment_id: body.equipment_id,
-        status: 'pending', details: body.details, user_id: userId,
-      })
-      .select('id')
-      .single();
+        nama_pemohon: body.nama,
+        no_wa_pemohon: body.no_wa,
+        sub_depart: body.sub_depart, 
+        job_type_id: body.job_type_id, 
+        equipment_id: body.equipment_id,
+        status: 'pending',
+        details: body.details, 
+        user_id: userId,
+      });
 
-    if (dbError || !woData) {
-      throw new Error(`Database Error: ${dbError?.message || 'Gagal menyimpan work order'}`);
+    if (woError) {
+      throw new Error(`Database Error: ${woError.message}`);
+    }
+    
+    // Setelah work order pertama berhasil dibuat, tandai profil sebagai lengkap
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .update({ is_profile_complete: true })
+      .eq('id', userId);
+
+    if (profileError) {
+        console.warn(`Peringatan: Gagal update status profil untuk user ${userId}:`, profileError.message);
     }
 
-    const approveUrl = `${appUrl}/api/handle-approval?id=${woData.id}&action=approve`;
-    const rejectUrl = `${appUrl}/reject-form?id=${woData.id}`; // Mengarah ke form penolakan
+    return NextResponse.json({ message: 'Work Order berhasil dibuat dan profil Anda telah diperbarui.' }, { status: 201 });
 
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <h1 style="color: #333;">Work Order Baru Diterima</h1>
-        <hr style="border: none; border-top: 1px solid #eee;">
-        <h3 style="color: #333;">Detail Pemohon:</h3>
-        <ul style="list-style-type: none; padding: 0;">
-          <li><strong>Nama:</strong> ${body.nama}</li>
-          <li><strong>Email:</strong> ${body.email}</li>
-          <li><strong>Departemen:</strong> ${body.sub_depart}</li>
-          <li><strong>Jenis Pekerjaan:</strong> ${namaPekerjaan}</li>
-        </ul>
-        <hr style="border: none; border-top: 1px solid #eee;">
-        <h3 style="color: #333;">Detail Pekerjaan:</h3>
-        ${formatDetailsToHtml(body.details)}
-        <hr style="border: none; border-top: 1px solid #eee;">
-        <h3 style="color: #333;">Tindakan:</h3>
-        <p>Silakan setujui atau tolak permintaan Work Order ini.</p>
-        <div style="margin-top: 20px;">
-          <a href="${approveUrl}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-right: 10px; font-weight: bold;">Setujui</a>
-          <a href="${rejectUrl}" style="background-color: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Tolak</a>
-        </div>
-      </div>
-    `;
-    
-    await transporter.sendMail({
-      from: `"Sistem Work Order" <${process.env.GMAIL_EMAIL}>`,
-      to: emailTujuan,
-      subject: `[WORK ORDER BARU] Permintaan Baru`,
-      html: emailHtml,
-    });
-
-    return NextResponse.json({ message: 'Work Order berhasil dibuat dan notifikasi persetujuan telah dikirim.' }, { status: 201 });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi error tidak diketahui';
-    console.error(error);
+    console.error('Error saat membuat Work Order:', error);
     return NextResponse.json({ message: `Gagal membuat Work Order: ${errorMessage}` }, { status: 500 });
   }
 }
