@@ -74,10 +74,6 @@ export async function updateSession(request: NextRequest) {
     if ((userRole === 'admin' || userRole === 'engineer') && !pathname.startsWith('/admin')) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
-    if (userRole === 'pemohon' && pathname.startsWith('/admin')) {
-      // BENAR: Arahkan ke halaman utama ('/'), bukan ke form lagi
-      return NextResponse.redirect(new URL('/', request.url));
-    }
   }
 
   // Jika tidak ada aturan redirect yang cocok, lanjutkan request
