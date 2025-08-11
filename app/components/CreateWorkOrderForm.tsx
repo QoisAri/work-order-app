@@ -17,17 +17,15 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
-    console.log("1. Form submission started."); // LOG 1
 
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
     try {
-      console.log("2. Sending data to API:", data); // LOG 2
       const response = await fetch('/api/submit-work-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -39,30 +37,25 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         }),
       });
 
-      console.log("3. Received response from API. Status:", response.status); // LOG 3
       const result = await response.json();
 
       if (!response.ok) {
         throw new Error(result.message || 'Gagal mengirim data.');
       }
 
-      console.log("4. API call successful. Preparing to redirect."); // LOG 4
-
-      // Lakukan refresh dulu untuk memastikan server tahu profil sudah lengkap
-      await router.refresh();
-      console.log("5. router.refresh() has completed."); // LOG 5
+      // --- PERBAIKAN FINAL DI SINI ---
       
-      // Arahkan ke dasbor utama
-      router.push('/');
-      console.log("6. router.push('/') has been called."); // LOG 6
+      // Karena router.push() tidak berjalan, kita paksa dengan cara browser.
+      // Ini akan menyebabkan full page reload ke halaman utama.
+      // Kita tidak perlu lagi router.refresh() karena full reload otomatis mengambil data baru.
+      window.location.href = '/';
 
     } catch (err: any) {
-      console.error("ERROR during submission:", err); // LOG ERROR
       setError(err.message);
-    } finally {
-      setIsLoading(false);
-      console.log("7. Submission process finished (finally block)."); // LOG 7
-    }
+      // Kita tidak perlu setIsLoading(false) di sini karena halaman akan di-reload
+    } 
+    // Kita juga bisa hapus 'finally' block jika mau,
+    // karena halaman akan pindah sebelum sempat dieksekusi.
   }
 
   return (
