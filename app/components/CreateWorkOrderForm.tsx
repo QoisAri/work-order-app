@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-// Tipe data ini kita asumsikan sudah benar
 type JobType = { id: string; nama_pekerjaan: string };
 type Department = { id: string; nama_departemen: string };
 
@@ -13,7 +12,6 @@ type FormProps = {
 };
 
 export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps) {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,25 +41,24 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         throw new Error(result.message || 'Gagal mengirim data.');
       }
 
-      // --- INI ADALAH SOLUSI FINAL ---
-      
-      // Beri jeda 100 milidetik untuk memastikan database sudah selesai update.
-      setTimeout(() => {
-        // Lakukan hard-reload ke halaman utama.
-        // Ini akan memaksa middleware untuk mengambil data terbaru.
-        window.location.href = '/';
-      }, 100);
+      // --- PERUBAHAN KUNCI DI SINI ---
+      // Jika API mengirim kembali URL untuk redirect, gunakan itu.
+      if (result.redirectUrl) {
+        window.location.href = result.redirectUrl;
+      } else {
+        // Fallback jika tidak ada URL redirect
+        alert('Proses berhasil, tetapi gagal mengarahkan halaman.');
+        setIsLoading(false);
+      }
 
     } catch (err: any) {
       setError(err.message);
-      // Jika terjadi error, pastikan tombolnya aktif kembali.
-      setIsLoading(false); 
+      setIsLoading(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md">
-       {/* ... Sisa kode JSX Anda tidak perlu diubah ... */}
        <h1 className="text-2xl font-bold text-center text-gray-800">
         Lengkapi Profil Anda
       </h1>

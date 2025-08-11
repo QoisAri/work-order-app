@@ -7,7 +7,7 @@ const supabaseAdmin = createClient(
 );
 
 async function handleUserProfile(
-    full_name: string, // Diubah ke full_name
+    full_name: string,
     email: string,
     no_wa: string,
     sub_depart: string
@@ -22,9 +22,8 @@ async function handleUserProfile(
         throw new Error(`Gagal mencari profil: ${findError.message}`);
     }
 
-    // Data untuk di-update, sekarang menggunakan 'full_name'
     const profileData = {
-        full_name: full_name, // PERBAIKAN KUNCI
+        full_name: full_name,
         email: email,
         no_wa: no_wa,
         sub_depart: sub_depart,
@@ -36,41 +35,26 @@ async function handleUserProfile(
             .from('profiles')
             .update(profileData)
             .eq('id', existingProfile.id);
-
-        if (updateError) {
-            // Kita lempar error agar frontend tahu ada masalah
-            throw new Error(`Gagal mengupdate profil: ${updateError.message}`);
-        }
+        if (updateError) throw new Error(`Gagal mengupdate profil: ${updateError.message}`);
     } else {
-        // Logika untuk user baru (signUp)
         const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.signUp({
             email: email,
             password: `wopass-${Date.now()}`,
-            options: {
-                data: { full_name: full_name }, // Menggunakan full_name
-            },
+            options: { data: { full_name: full_name } },
         });
-
-        if (signUpError || !signUpData.user) {
-            throw new Error(`Gagal mendaftarkan user baru di Auth: ${signUpError?.message}`);
-        }
+        if (signUpError || !signUpData.user) throw new Error(`Gagal mendaftarkan user baru di Auth: ${signUpError?.message}`);
         
-        // Update baris profil yang dibuat oleh trigger
         const { error: updateNewProfileError } = await supabaseAdmin
             .from('profiles')
             .update(profileData)
             .eq('id', signUpData.user.id);
-        
-        if (updateNewProfileError) {
-             throw new Error(`Gagal melengkapi profil untuk user baru: ${updateNewProfileError.message}`);
-        }
+        if (updateNewProfileError) throw new Error(`Gagal melengkapi profil: ${updateNewProfileError.message}`);
     }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    // Ambil data dari body, sekarang menggunakan 'full_name'
     const { full_name, email, no_wa, sub_depart } = body;
 
     if (!full_name || !email || !no_wa || !sub_depart) {
@@ -79,7 +63,13 @@ export async function POST(request: Request) {
 
     await handleUserProfile(full_name, email, no_wa, sub_depart);
 
-    return NextResponse.json({ message: 'Profil berhasil dibuat atau diperbarui.' }, { status: 200 });
+    // --- PERUBAHAN KUNCI DI SINI ---
+    // Kirim respons sukses beserta URL untuk redirect.
+    return NextResponse.json({ 
+        success: true, 
+        message: 'Profil berhasil dibuat atau diperbarui.',
+        redirectUrl: '/' 
+    }, { status: 200 });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Terjadi error tidak diketahui';
