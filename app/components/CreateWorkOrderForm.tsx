@@ -1,8 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+// Asumsi tipe data ini sudah ada di file Anda
 type JobType = { id: string; nama_pekerjaan: string };
 type Department = { id: string; nama_departemen: string };
 
@@ -14,9 +14,6 @@ type FormProps = {
 export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Hapus useRouter, kita tidak membutuhkannya lagi untuk ini
-  // const router = useRouter();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,21 +29,27 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           full_name: data.full_name,
-          email: data.email,
           no_wa: data.no_wa,
           sub_depart: data.sub_depart,
         }),
       });
 
-      // Jika response TIDAK OK (misal error 400 atau 500), kita tampilkan pesannya
+      const result = await response.json();
+
       if (!response.ok) {
-        const result = await response.json();
         throw new Error(result.message || 'Gagal mengirim data.');
       }
-      
-      // Jika response.ok, berarti redirect sedang terjadi.
-      // Kita tidak perlu melakukan apa-apa lagi di sini. Browser akan menangani sisanya.
-      // State `isLoading` akan hilang saat halaman baru dimuat.
+
+      // PERUBAHAN UTAMA: Jika server merespons dengan sukses,
+      // kita paksa pindah halaman di sini.
+      if (result.success) {
+        // Menggunakan window.location.assign() untuk navigasi yang jelas.
+        // Ganti '/dashboard' jika halaman tujuan Anda berbeda.
+        window.location.assign('/dashboard');
+      } else {
+        // Fallback jika sukses bernilai false
+        throw new Error(result.message || 'Terjadi kesalahan yang tidak diketahui.');
+      }
 
     } catch (err: any) {
       setError(err.message);
@@ -56,7 +59,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md">
-       <h1 className="text-2xl font-bold text-center text-gray-800">
+      <h1 className="text-2xl font-bold text-center text-gray-800">
         Lengkapi Profil Anda
       </h1>
       
@@ -66,10 +69,12 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
         <input type="text" name="full_name" id="full_name" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
       </div>
+
       <div>
         <label htmlFor="no_wa" className="block text-sm font-medium text-gray-700">No. WhatsApp</label>
         <input type="tel" name="no_wa" id="no_wa" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
       </div>
+
       <div>
         <label htmlFor="sub_depart" className="block text-sm font-medium text-gray-700">User Sub Depart</label>
         <select name="sub_depart" id="sub_depart" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
@@ -79,6 +84,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
           ))}
         </select>
       </div>
+      
       <div>
         <label htmlFor="job_type_id_placeholder" className="block text-sm font-medium text-gray-700">Jenis Pekerjaan (Contoh)</label>
         <select name="job_type_id_placeholder" id="job_type_id_placeholder" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
@@ -98,4 +104,4 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
       </button>
     </form>
   );
-} 
+}

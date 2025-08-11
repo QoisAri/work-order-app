@@ -1,21 +1,23 @@
 'use client';
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
-import { supabase } from "@/lib/supabaseClient";
-
+import { createClient } from "@/utils/supabase/client"; // Gunakan client dari ssr utils
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
+import Link from "next/link";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 type WorkOrderStatus = 'pending' | 'approved' | 'rejected';
-type TimeRange = 'day' | 'week' | 'month' | 'year'; // Tipe data untuk filter waktu
+type TimeRange = 'day' | 'week' | 'month' | 'year';
 
 export default function DashboardPage() {
+  // State untuk data pengguna
   const [userName, setUserName] = useState<string | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>('month'); // State untuk filter, default 'Bulan Ini'
-  
+  const [isLoading, setIsLoading] = useState(true); // State untuk loading
+  const [error, setError] = useState<string | null>(null); // State untuk error
+
+  const [timeRange, setTimeRange] = useState<TimeRange>('month');
   const [chartData, setChartData] = useState({
     labels: ['Pending', 'Approved', 'Rejected'],
     datasets: [
@@ -29,8 +31,10 @@ export default function DashboardPage() {
     ],
   });
 
-  // useCallback digunakan agar fungsi tidak dibuat ulang setiap render, kecuali timeRange berubah
+  const supabase = createClient(); // Buat instance supabase client
+
   const fetchWorkOrderStats = useCallback(async () => {
+    // ... (logika fetchWorkOrderStats Anda tidak perlu diubah)
     const now = new Date();
     let startDate: Date;
 
@@ -52,18 +56,17 @@ export default function DashboardPage() {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
     
-    // Query ke Supabase dengan filter tanggal
     const { data, error } = await supabase
       .from('work_orders')
       .select('status')
-      .gte('created_at', startDate.toISOString()); // Filter data yang dibuat setelah tanggal mulai
+      .gte('created_at', startDate.toISOString());
 
     if (error) {
       console.error("Error fetching work order stats:", error);
       return;
     }
 
-    const counts = { pending: 0, approved: 0, rejected: 0 };
+    const counts: { [key in WorkOrderStatus]: number } = { pending: 0, approved: 0, rejected: 0 };
     data.forEach(item => {
         if(item.status && counts.hasOwnProperty(item.status)) {
             counts[item.status as WorkOrderStatus]++;
@@ -74,22 +77,52 @@ export default function DashboardPage() {
       ...prevData,
       datasets: [{ ...prevData.datasets[0], data: [counts.pending, counts.approved, counts.rejected] }],
     }));
-  }, [timeRange]); // Fungsi ini akan diperbarui jika timeRange berubah
+  }, [timeRange, supabase]);
 
+  // useEffect untuk mengambil data user dan statistik
   useEffect(() => {
-    const storedUserInfo = sessionStorage.getItem('workOrderUserInfo');
-    if (storedUserInfo) {
-      setUserName(JSON.parse(storedUserInfo).nama);
-    }
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
 
-    // Panggil fungsi fetch saat komponen dimuat dan setiap kali filternya berubah
-    fetchWorkOrderStats();
+      // 1. Ambil data user yang sedang login
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
 
+      if (userError || !user) {
+        setError("Gagal mengambil data pengguna. Silakan coba login kembali.");
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Ambil nama dari tabel 'profiles'
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError || !profileData) {
+        setError("Gagal mengambil profil pengguna.");
+        setIsLoading(false);
+        return;
+      }
+
+      setUserName(profileData.full_name);
+      
+      // 3. Ambil statistik work order
+      await fetchWorkOrderStats();
+
+      setIsLoading(false);
+    };
+
+    fetchData();
+
+    // Setup real-time subscription
     const channel = supabase.channel('work_orders_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'work_orders' }, 
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'work_orders' },
         () => {
           console.log('Perubahan terdeteksi, mengambil ulang data...');
-          fetchWorkOrderStats(); // Ambil ulang data dengan filter yang sedang aktif
+          fetchWorkOrderStats();
         }
       )
       .subscribe();
@@ -97,16 +130,26 @@ export default function DashboardPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchWorkOrderStats]); // useEffect ini bergantung pada fungsi fetchWorkOrderStats
+  }, [fetchWorkOrderStats, supabase]);
 
-  if (!userName) {
+  // Tampilan saat loading
+  if (isLoading) {
     return (
-        <div className="bg-white p-8 rounded-lg shadow-md text-center">
-            {/* ... fallback UI ... */}
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-xl">Memuat Dashboard...</p>
+      </div>
     );
   }
 
+  // Tampilan jika ada error
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-red-100">
+        <p className="text-xl text-red-700">{error}</p>
+      </div>
+    );
+  }
+  
   const filterButtons = [
       { label: 'Hari Ini', value: 'day' },
       { label: 'Minggu Ini', value: 'week' },
@@ -115,17 +158,18 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="w-full space-y-8">
+    <div className="w-full p-4 md:p-8 space-y-8">
       <div className="bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
         <p className="mt-2 text-lg text-gray-600">Selamat datang, <strong>{userName}</strong>!</p>
-        <p className="mt-4">Silakan lanjutkan proses pembuatan Work Order Anda.</p>
+        <Link href="/create-work-order" className="mt-4 inline-block bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600 transition-colors">
+            Buat Work Order Baru
+        </Link>
       </div>
       
       <div className="bg-white p-8 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Ringkasan Work Order</h2>
         
-        {/* Tombol Filter Waktu */}
         <div className="flex justify-center space-x-2 mb-6">
             {filterButtons.map(btn => (
                 <button
@@ -142,7 +186,6 @@ export default function DashboardPage() {
             ))}
         </div>
 
-        {/* Container Grafik */}
         <div style={{ position: 'relative', height: '350px', width: '350px', margin: 'auto' }}>
             <Pie data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
         </div>
