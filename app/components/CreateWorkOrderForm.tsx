@@ -14,6 +14,9 @@ type FormProps = {
 export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Hapus useRouter, kita tidak membutuhkannya lagi untuk ini
+  // const router = useRouter();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,25 +38,19 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         }),
       });
 
-      const result = await response.json();
-
+      // Jika response TIDAK OK (misal error 400 atau 500), kita tampilkan pesannya
       if (!response.ok) {
+        const result = await response.json();
         throw new Error(result.message || 'Gagal mengirim data.');
       }
-
-      // --- PERUBAHAN KUNCI DI SINI ---
-      // Jika API mengirim kembali URL untuk redirect, gunakan itu.
-      if (result.redirectUrl) {
-        window.location.href = result.redirectUrl;
-      } else {
-        // Fallback jika tidak ada URL redirect
-        alert('Proses berhasil, tetapi gagal mengarahkan halaman.');
-        setIsLoading(false);
-      }
+      
+      // Jika response.ok, berarti redirect sedang terjadi.
+      // Kita tidak perlu melakukan apa-apa lagi di sini. Browser akan menangani sisanya.
+      // State `isLoading` akan hilang saat halaman baru dimuat.
 
     } catch (err: any) {
       setError(err.message);
-      setIsLoading(false);
+      setIsLoading(false); // Hanya set isLoading false jika ada error
     }
   }
 
