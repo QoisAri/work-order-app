@@ -13,8 +13,8 @@ export const config = {
      * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
+     * - auth (Supabase auth helpers)
      * - favicon.ico (favicon file)
-     * - auth (jika Anda punya route otentikasi khusus)
      */
     '/((?!api|_next/static|_next/image|auth|favicon.ico).*)',
   ],
