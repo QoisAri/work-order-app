@@ -30,7 +30,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          full_name: data.full_name, // Pastikan 'name' di input JSX adalah 'full_name'
+          full_name: data.full_name,
           email: data.email,
           no_wa: data.no_wa,
           sub_depart: data.sub_depart,
@@ -43,28 +43,31 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         throw new Error(result.message || 'Gagal mengirim data.');
       }
 
-      // Jika sukses, refresh data server lalu arahkan ke dasbor
-      await router.refresh();
-      router.push('/');
+      // --- INI ADALAH SOLUSI FINAL ---
+      
+      // Beri jeda 100 milidetik untuk memastikan database sudah selesai update.
+      setTimeout(() => {
+        // Lakukan hard-reload ke halaman utama.
+        // Ini akan memaksa middleware untuk mengambil data terbaru.
+        window.location.href = '/';
+      }, 100);
 
     } catch (err: any) {
       setError(err.message);
-    } finally {
-      // BLOK INI SANGAT PENTING
-      // 'finally' akan selalu berjalan, baik proses di 'try' berhasil maupun gagal.
-      // Ini memastikan tombolnya tidak akan macet.
-      setIsLoading(false);
+      // Jika terjadi error, pastikan tombolnya aktif kembali.
+      setIsLoading(false); 
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold text-center text-gray-800">
+       {/* ... Sisa kode JSX Anda tidak perlu diubah ... */}
+       <h1 className="text-2xl font-bold text-center text-gray-800">
         Lengkapi Profil Anda
       </h1>
       
       {error && <p className="text-red-500 text-center">{error}</p>}
-
+      
       <div>
         <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
         <input type="text" name="full_name" id="full_name" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
