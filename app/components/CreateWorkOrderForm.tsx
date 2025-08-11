@@ -41,7 +41,6 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
       if (!response.ok) throw new Error(result.message);
 
       // Setelah sukses, arahkan ke dasbor
-      alert('Profil berhasil dibuat!');
       router.push('/'); // Arahkan ke dasbor utama ('/')
       router.refresh(); // Penting: Refresh state di server agar middleware & layout tahu profil sudah lengkap
 

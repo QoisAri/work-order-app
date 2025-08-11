@@ -32,7 +32,7 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Halaman publik yang tidak memerlukan login
-  const publicPages = ['/login', '/submit-work-order'];
+  const publicPages = ['/login',];
 
   // 1. Logika untuk Pengguna yang Belum Login
   if (!user) {
