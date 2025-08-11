@@ -67,10 +67,6 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         <input type="text" name="full_name" id="full_name" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
       </div>
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-        <input type="email" name="email" id="email" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
-      </div>
-      <div>
         <label htmlFor="no_wa" className="block text-sm font-medium text-gray-700">No. WhatsApp</label>
         <input type="tel" name="no_wa" id="no_wa" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
       </div>
