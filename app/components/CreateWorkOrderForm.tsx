@@ -21,16 +21,16 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
     event.preventDefault();
     setIsLoading(true);
     setError(null);
+    console.log("1. Form submission started."); // LOG 1
 
     const formData = new FormData(event.currentTarget);
     const data = Object.fromEntries(formData.entries());
 
     try {
+      console.log("2. Sending data to API:", data); // LOG 2
       const response = await fetch('/api/submit-work-order', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nama: data.nama_lengkap,
           email: data.email,
@@ -39,26 +39,29 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         }),
       });
 
+      console.log("3. Received response from API. Status:", response.status); // LOG 3
       const result = await response.json();
 
       if (!response.ok) {
         throw new Error(result.message || 'Gagal mengirim data.');
       }
 
-      // --- INI KOMBINASI KUNCI YANG DIPERBAIKI ---
-      
-      // 1. Refresh data server. Ini akan membuat server tahu
-      //    bahwa profil Anda sudah lengkap untuk request berikutnya.
-      router.refresh();
+      console.log("4. API call successful. Preparing to redirect."); // LOG 4
 
-      // 2. Arahkan pengguna ke dasbor.
+      // Lakukan refresh dulu untuk memastikan server tahu profil sudah lengkap
+      await router.refresh();
+      console.log("5. router.refresh() has completed."); // LOG 5
+      
+      // Arahkan ke dasbor utama
       router.push('/');
+      console.log("6. router.push('/') has been called."); // LOG 6
 
     } catch (err: any) {
+      console.error("ERROR during submission:", err); // LOG ERROR
       setError(err.message);
     } finally {
-      // 3. Pastikan loading selalu berhenti, baik sukses maupun gagal.
       setIsLoading(false);
+      console.log("7. Submission process finished (finally block)."); // LOG 7
     }
   }
 
