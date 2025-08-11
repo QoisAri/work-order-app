@@ -30,7 +30,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nama: data.nama_lengkap,
+          full_name: data.full_name,
           email: data.email,
           no_wa: data.no_wa,
           sub_depart: data.sub_depart,
@@ -44,11 +44,10 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
       }
 
       // --- PERBAIKAN FINAL DI SINI ---
-      
-      // Karena router.push() tidak berjalan, kita paksa dengan cara browser.
-      // Ini akan menyebabkan full page reload ke halaman utama.
-      // Kita tidak perlu lagi router.refresh() karena full reload otomatis mengambil data baru.
-      window.location.href = '/';
+            await router.refresh();
+
+      // 2. Setelah refresh selesai, baru lakukan navigasi ke halaman utama.
+            router.push('/');
 
     } catch (err: any) {
       setError(err.message);
@@ -67,9 +66,9 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
       {error && <p className="text-red-500 text-center">{error}</p>}
 
       {/* ... Sisa kode JSX untuk input fields (tidak ada perubahan) ... */}
-      <div>
-        <label htmlFor="nama_lengkap" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-        <input type="text" name="nama_lengkap" id="nama_lengkap" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
+       <div>
+        <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+        <input type="text" name="full_name" id="full_name" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
       </div>
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>

@@ -1,63 +1,53 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Gunakan SERVICE_ROLE_KEY agar bisa melewati RLS
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-/**
- * Fungsi ini akan menangani pembuatan atau pembaruan profil pengguna.
- * Alur yang lebih sederhana dan andal.
- */
 async function handleUserProfile(
-    nama_lengkap: string,
+    full_name: string, // Diubah ke full_name
     email: string,
     no_wa: string,
     sub_depart: string
 ) {
-    // 1. Cek apakah user sudah ada di tabel 'profiles' kita berdasarkan email.
     let { data: existingProfile, error: findError } = await supabaseAdmin
         .from('profiles')
         .select('id')
         .eq('email', email)
         .single();
 
-    // Jika terjadi error saat mencari, hentikan proses.
-    if (findError && findError.code !== 'PGRST116') { // Abaikan error 'PGRST116' (no rows found)
+    if (findError && findError.code !== 'PGRST116') {
         throw new Error(`Gagal mencari profil: ${findError.message}`);
     }
 
-    // Data untuk di-insert atau di-update
+    // Data untuk di-update, sekarang menggunakan 'full_name'
     const profileData = {
-        nama_lengkap,
-        email,
-        no_wa,
-        sub_depart,
+        full_name: full_name, // PERBAIKAN KUNCI
+        email: email,
+        no_wa: no_wa,
+        sub_depart: sub_depart,
         is_profile_complete: true,
     };
 
     if (existingProfile) {
-        // 2. Jika profil sudah ada, UPDATE saja.
         const { error: updateError } = await supabaseAdmin
             .from('profiles')
             .update(profileData)
             .eq('id', existingProfile.id);
 
         if (updateError) {
+            // Kita lempar error agar frontend tahu ada masalah
             throw new Error(`Gagal mengupdate profil: ${updateError.message}`);
         }
     } else {
-        // 3. Jika profil belum ada, buat user baru di Auth dan profilnya.
+        // Logika untuk user baru (signUp)
         const { data: signUpData, error: signUpError } = await supabaseAdmin.auth.signUp({
             email: email,
-            password: `wopass-${Date.now()}`, // Buat password acak sementara
+            password: `wopass-${Date.now()}`,
             options: {
-                data: {
-                    nama_lengkap: nama_lengkap,
-                    role: 'pemohon',
-                },
+                data: { full_name: full_name }, // Menggunakan full_name
             },
         });
 
@@ -65,8 +55,7 @@ async function handleUserProfile(
             throw new Error(`Gagal mendaftarkan user baru di Auth: ${signUpError?.message}`);
         }
         
-        // Update baris profil yang seharusnya dibuat oleh trigger
-        // dengan data lengkap dari form.
+        // Update baris profil yang dibuat oleh trigger
         const { error: updateNewProfileError } = await supabaseAdmin
             .from('profiles')
             .update(profileData)
@@ -78,22 +67,17 @@ async function handleUserProfile(
     }
 }
 
-
-// --- MAIN POST HANDLER ---
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    // Ambil data dari body, sekarang menggunakan 'full_name'
+    const { full_name, email, no_wa, sub_depart } = body;
 
-    // Ambil data dari body request
-    const { nama, email, no_wa, sub_depart } = body;
-
-    // Validasi input dasar
-    if (!nama || !email || !no_wa || !sub_depart) {
+    if (!full_name || !email || !no_wa || !sub_depart) {
       return NextResponse.json({ message: 'Semua field wajib diisi.' }, { status: 400 });
     }
 
-    // Panggil satu fungsi utama untuk menangani semua logika
-    await handleUserProfile(nama, email, no_wa, sub_depart);
+    await handleUserProfile(full_name, email, no_wa, sub_depart);
 
     return NextResponse.json({ message: 'Profil berhasil dibuat atau diperbarui.' }, { status: 200 });
 
