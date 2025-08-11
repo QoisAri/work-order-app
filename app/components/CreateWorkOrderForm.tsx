@@ -1,8 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation'; // <-- (Langkah 1)
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+// Tipe data ini kita asumsikan sudah benar
 type JobType = { id: string; nama_pekerjaan: string };
 type Department = { id: string; nama_departemen: string };
 
@@ -12,7 +13,7 @@ type FormProps = {
 };
 
 export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps) {
-  const router = useRouter(); // <-- (Langkah 2)
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,31 +28,40 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
     try {
       const response = await fetch('/api/submit-work-order', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           nama: data.nama_lengkap,
           email: data.email,
           no_wa: data.no_wa,
           sub_depart: data.sub_depart,
-          // job_type_id dan equipment_id ditangani di form lain, jadi tidak perlu di sini
         }),
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message);
 
-      // Setelah sukses, arahkan ke dasbor
-      router.push('/'); // Arahkan ke dasbor utama ('/')
-      router.refresh(); // Penting: Refresh state di server agar middleware & layout tahu profil sudah lengkap
+      if (!response.ok) {
+        throw new Error(result.message || 'Gagal mengirim data.');
+      }
+
+      // --- INI KOMBINASI KUNCI YANG DIPERBAIKI ---
+      
+      // 1. Refresh data server. Ini akan membuat server tahu
+      //    bahwa profil Anda sudah lengkap untuk request berikutnya.
+      router.refresh();
+
+      // 2. Arahkan pengguna ke dasbor.
+      router.push('/');
 
     } catch (err: any) {
       setError(err.message);
     } finally {
+      // 3. Pastikan loading selalu berhenti, baik sukses maupun gagal.
       setIsLoading(false);
     }
   }
 
-  // ... sisa kode JSX untuk form (tidak ada perubahan di sini)
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold text-center text-gray-800">
@@ -60,8 +70,8 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
       
       {error && <p className="text-red-500 text-center">{error}</p>}
 
-      {/* ... semua input field ... */}
-       <div>
+      {/* ... Sisa kode JSX untuk input fields (tidak ada perubahan) ... */}
+      <div>
         <label htmlFor="nama_lengkap" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
         <input type="text" name="nama_lengkap" id="nama_lengkap" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
       </div>
@@ -82,9 +92,6 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
           ))}
         </select>
       </div>
-      
-      {/* Untuk form profil, jenis pekerjaan mungkin tidak diperlukan */}
-      {/* Anda bisa hapus jika tidak relevan */}
       <div>
         <label htmlFor="job_type_id_placeholder" className="block text-sm font-medium text-gray-700">Jenis Pekerjaan (Contoh)</label>
         <select name="job_type_id_placeholder" id="job_type_id_placeholder" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
@@ -94,7 +101,6 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
           ))}
         </select>
       </div>
-
 
       <button
         type="submit"
