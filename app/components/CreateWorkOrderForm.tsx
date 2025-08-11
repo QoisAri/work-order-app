@@ -17,7 +17,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
@@ -30,7 +30,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          full_name: data.full_name,
+          full_name: data.full_name, // Pastikan 'name' di input JSX adalah 'full_name'
           email: data.email,
           no_wa: data.no_wa,
           sub_depart: data.sub_depart,
@@ -43,18 +43,18 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
         throw new Error(result.message || 'Gagal mengirim data.');
       }
 
-      // --- PERBAIKAN FINAL DI SINI ---
-            await router.refresh();
-
-      // 2. Setelah refresh selesai, baru lakukan navigasi ke halaman utama.
-            router.push('/');
+      // Jika sukses, refresh data server lalu arahkan ke dasbor
+      await router.refresh();
+      router.push('/');
 
     } catch (err: any) {
       setError(err.message);
-      // Kita tidak perlu setIsLoading(false) di sini karena halaman akan di-reload
-    } 
-    // Kita juga bisa hapus 'finally' block jika mau,
-    // karena halaman akan pindah sebelum sempat dieksekusi.
+    } finally {
+      // BLOK INI SANGAT PENTING
+      // 'finally' akan selalu berjalan, baik proses di 'try' berhasil maupun gagal.
+      // Ini memastikan tombolnya tidak akan macet.
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -65,8 +65,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments }: FormProps
       
       {error && <p className="text-red-500 text-center">{error}</p>}
 
-      {/* ... Sisa kode JSX untuk input fields (tidak ada perubahan) ... */}
-       <div>
+      <div>
         <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
         <input type="text" name="full_name" id="full_name" required className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
       </div>
