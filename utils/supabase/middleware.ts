@@ -65,9 +65,6 @@ export async function updateSession(request: NextRequest) {
   // Jika profil sudah lengkap
   if (profile && profile.is_profile_complete) {
     // Jangan biarkan user kembali ke form submit
-    if (pathname === '/submit-work-order') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
 
     // Logika pengalihan berdasarkan peran (Role-based redirect)
     const userRole = profile.role;

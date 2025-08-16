@@ -1,46 +1,58 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
+// app/api/submit-work-order/route.ts
 
-export async function POST(request: NextRequest) {
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+
+export async function POST(request: Request) {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) { return cookieStore.get(name)?.value; },
+        set(name: string, value: string, options: CookieOptions) { cookieStore.set({ name, value, ...options }); },
+        remove(name: string, options: CookieOptions) { cookieStore.delete({ name, ...options }); },
+      },
+    }
+  );
+
   try {
-    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user || !user.email) {
-      return NextResponse.json({ message: 'Otentikasi gagal atau email tidak ditemukan.' }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ message: 'Akses ditolak.' }, { status: 401 });
     }
 
     const body = await request.json();
-    const { full_name, no_wa, sub_depart } = body;
 
-    if (!full_name || !no_wa || !sub_depart) {
-      return NextResponse.json({ message: 'Semua field wajib diisi.' }, { status: 400 });
+    // Simpan data ke tabel 'work_orders'
+    // Perhatikan: kita tidak lagi memasukkan equipment_id di sini
+    const { data, error } = await supabase
+      .from('work_orders')
+      .insert([
+        {
+          ...body,
+          status: 'pending',
+          user_id: user.id,
+          // equipment_id sengaja dibiarkan kosong (NULL)
+        },
+      ])
+      .select('id') // <-- PENTING: Ambil ID dari WO yang baru dibuat
+      .single();
+
+    if (error) {
+      throw new Error(`Gagal menyimpan ke database: ${error.message}`);
     }
 
-    const profileData = {
-      full_name,
-      no_wa,
-      sub_depart,
-      email: user.email,
-      is_profile_complete: true,
-    };
+    // Kirim respons berhasil beserta ID unik dari WO yang baru
+    return NextResponse.json({ 
+      message: 'Work Order berhasil dibuat.', 
+      data: data // Ini akan berisi { id: '...' }
+    }, { status: 201 });
 
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(profileData)
-      .eq('id', user.id);
-
-    if (updateError) {
-      console.error("Supabase Update Error:", updateError);
-      throw new Error(`Gagal mengupdate profil di database: ${updateError.message}`);
-    }
-
-    // PERUBAHAN UTAMA: Kirim respons JSON, bukan redirect.
-    return NextResponse.json({ success: true, message: 'Profil berhasil diperbarui.' }, { status: 200 });
-
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Terjadi error tidak diketahui';
-    console.error('Error saat submit profil:', error);
-    return NextResponse.json({ message: `Gagal memproses permintaan: ${errorMessage}` }, { status: 500 });
+  } catch (err: any) {
+    console.error('API Error:', err);
+    return NextResponse.json({ message: err.message }, { status: 500 });
   }
 }
