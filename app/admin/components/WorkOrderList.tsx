@@ -4,7 +4,7 @@ import { type WorkOrder } from './AdminTabs';
 
 type WorkOrderListProps = {
   workOrders: WorkOrder[];
-  activeTab: 'pending' | 'approved' | 'rejected'; // Tambahkan prop ini
+  activeTab: 'pending' | 'approved' | 'rejected';
 };
 
 export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListProps) {
@@ -20,7 +20,6 @@ export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListPr
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               ID Work Order
             </th>
-            {/* Tampilkan kolom ini hanya di tab 'approved' */}
             {activeTab === 'approved' && (
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Nomor WO
@@ -44,12 +43,12 @@ export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListPr
           {workOrders.map((wo) => (
             <tr key={wo.id}>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{wo.id.substring(0, 8)}...</td>
-              {/* Tampilkan kolom ini hanya di tab 'approved' */}
               {activeTab === 'approved' && (
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                   {wo.wo_number || 'N/A'}
                 </td>
               )}
+              {/* PERBAIKAN: Mengakses properti langsung dari objek */}
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wo.profiles?.full_name || 'N/A'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wo.equipments?.nama_equipment || 'N/A'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
