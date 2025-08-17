@@ -27,17 +27,16 @@ export default function DashboardClient({ user, equipments, profile, children }:
   const pathname = usePathname();
 
   // Logika untuk mendeteksi halaman form equipment dipindahkan ke sini
-  const isEquipmentFormPage = pathname.split('/').length > 2 && 
-                              pathname !== '/components/Create' &&
-                              !pathname.startsWith('/dashboard/admin'); // Tambahkan path lain jika perlu
+const showEquipmentMenu = pathname.split('/').length > 2 && 
+                          pathname !== '/dashboard/create' &&
+                          !pathname.startsWith('/dashboard/admin'); // Tambahkan path lain jika perlu
 
   return (
     <div className="flex min-h-screen">
       <Sidebar 
-        user={user} 
-        equipments={equipments} 
-        // Kirim boolean untuk memberi tahu Sidebar apakah harus menampilkan menu
-        showEquipmentMenu={!isEquipmentFormPage} 
+  user={user} 
+  equipments={equipments} 
+  showEquipmentMenu={showEquipmentMenu} 
       />
       <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 overflow-y-auto">
         {children}
