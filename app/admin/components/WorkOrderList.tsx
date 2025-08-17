@@ -1,12 +1,13 @@
 // app/admin/components/WorkOrderList.tsx
 import Link from 'next/link';
-import { type WorkOrder } from './AdminTabs'; // Impor tipe data dari AdminTabs
+import { type WorkOrder } from './AdminTabs';
 
 type WorkOrderListProps = {
   workOrders: WorkOrder[];
+  activeTab: 'pending' | 'approved' | 'rejected'; // Tambahkan prop ini
 };
 
-export default function WorkOrderList({ workOrders }: WorkOrderListProps) {
+export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListProps) {
   if (workOrders.length === 0) {
     return <p className="text-center text-gray-500">Tidak ada work order yang ditemukan.</p>;
   }
@@ -19,6 +20,12 @@ export default function WorkOrderList({ workOrders }: WorkOrderListProps) {
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               ID Work Order
             </th>
+            {/* Tampilkan kolom ini hanya di tab 'approved' */}
+            {activeTab === 'approved' && (
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Nomor WO
+              </th>
+            )}
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Pemohon
             </th>
@@ -37,9 +44,14 @@ export default function WorkOrderList({ workOrders }: WorkOrderListProps) {
           {workOrders.map((wo) => (
             <tr key={wo.id}>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{wo.id.substring(0, 8)}...</td>
-              {/* PERBAIKAN: Mengakses elemen pertama dari array */}
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wo.profiles?.[0]?.nama_lengkap || 'N/A'}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wo.equipments?.[0]?.nama_equipment || 'N/A'}</td>
+              {/* Tampilkan kolom ini hanya di tab 'approved' */}
+              {activeTab === 'approved' && (
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                  {wo.wo_number || 'N/A'}
+                </td>
+              )}
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wo.profiles?.full_name || 'N/A'}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wo.equipments?.nama_equipment || 'N/A'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {new Date(wo.created_at).toLocaleDateString('id-ID', {
                   day: '2-digit',

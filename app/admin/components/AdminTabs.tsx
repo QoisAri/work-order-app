@@ -10,13 +10,13 @@ export type WorkOrder = {
   id: string;
   created_at: string;
   status: 'pending' | 'approved' | 'rejected';
-  // PERBAIKAN: Mengubah tipe menjadi array of objects
+  wo_number: string | null; // Tambahkan wo_number
   profiles: {
-    nama_lengkap: string | null;
-  }[] | null;
+    full_name: string | null;
+  } | null;
   equipments: {
     nama_equipment: string | null;
-  }[] | null;
+  } | null;
 };
 
 export default function AdminTabs() {
@@ -37,7 +37,8 @@ export default function AdminTabs() {
           id,
           created_at,
           status,
-          profiles ( nama_lengkap ),
+          wo_number,
+          profiles ( full_name ),
           equipments ( nama_equipment )
         `)
         .eq('status', activeTab)
@@ -47,7 +48,7 @@ export default function AdminTabs() {
         console.error('Error fetching work orders:', error);
         setError('Gagal memuat data work order.');
       } else {
-        setWorkOrders(data as WorkOrder[]);
+        setWorkOrders(data as any as WorkOrder[]);
       }
       setIsLoading(false);
     };
@@ -58,7 +59,8 @@ export default function AdminTabs() {
   const renderContent = () => {
     if (isLoading) return <p className="text-center text-gray-500">Memuat data...</p>;
     if (error) return <p className="text-center text-red-500">{error}</p>;
-    return <WorkOrderList workOrders={workOrders} />;
+    // Teruskan status tab aktif ke WorkOrderList
+    return <WorkOrderList workOrders={workOrders} activeTab={activeTab} />;
   };
 
   return (

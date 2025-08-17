@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  // --- 1. Logika untuk Pengguna yang Belum Login ---
+  // Jika pengguna belum login, paksa ke halaman login
   if (!user) {
     if (pathname !== '/login') {
       return NextResponse.redirect(new URL('/login', request.url));
@@ -42,44 +42,33 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // --- 2. Logika untuk Pengguna yang Sudah Login ---
-  // Ambil role DAN status kelengkapan profil
+  // Jika pengguna sudah login, periksa perannya
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, is_profile_complete')
+    .select('role')
     .eq('id', user.id)
     .single();
 
   const userRole = profile?.role;
-  const isProfileComplete = profile?.is_profile_complete;
 
-  // --- PERBAIKAN: Logika baru berdasarkan peran ---
-
-  // Jika pengguna adalah ADMIN
+  // Aturan pengalihan berdasarkan peran
   if (userRole === 'admin') {
-    // Jika mencoba login, arahkan ke admin
-    if (pathname === '/login') {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
-    // Jika belum di halaman admin, arahkan ke sana
     if (!pathname.startsWith('/admin')) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
-  } 
-  // Jika pengguna BUKAN ADMIN
-  else {
-    // Jika mencoba akses halaman admin, tendang ke dashboard
+  } else { // Asumsikan peran lain adalah 'pemohon'
     if (pathname.startsWith('/admin')) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-    // Jika profil belum lengkap, paksa ke halaman submit WO
-    if (!isProfileComplete && pathname !== '/submit-work-order') {
-        return NextResponse.redirect(new URL('/submit-work-order', request.url));
-    }
-    // Jika sudah login tapi masih di halaman login, arahkan ke dashboard
-    if (pathname === '/login') {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
+  }
+
+  // Jika sudah login tapi masih di halaman login, arahkan ke tujuan yang benar
+  if (pathname === '/login') {
+      if (userRole === 'admin') {
+          return NextResponse.redirect(new URL('/admin', request.url));
+      } else {
+          return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
   }
 
   return response;

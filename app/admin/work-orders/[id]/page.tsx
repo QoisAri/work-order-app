@@ -1,23 +1,35 @@
-import { Suspense } from "react";
-import WorkOrderDetail from "./WorkOrderDetail";
+// app/admin/work-orders/[id]/page.tsx
+import { createClient } from '@/utils/supabase/server';
+import { notFound } from 'next/navigation';
+import WorkOrderDetail from './WorkOrderDetail';
+import ActionButtons from './ActionButtons';
 
-function LoadingSkeleton() {
-    return (
-        <div className="bg-white p-6 rounded-lg shadow-md animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div className="h-40 bg-gray-200 rounded mt-4"></div>
-            <div className="flex space-x-4 mt-6">
-                <div className="h-10 w-24 bg-gray-300 rounded"></div>
-                <div className="h-10 w-24 bg-gray-300 rounded"></div>
-            </div>
-        </div>
-    );
-}
+type PageProps = {
+  params: { id: string };
+};
 
-export default function WorkOrderDetailPage({ params }: { params: { id: string } }) {
+export default async function WorkOrderDetailPage({ params }: PageProps) {
+  const supabase = createClient();
+  const { data: workOrder } = await supabase
+    .from('work_orders')
+    .select(`
+      *,
+      profiles ( full_name, email ),
+      equipments ( nama_equipment )
+    `)
+    .eq('id', params.id)
+    .single();
+
+  if (!workOrder) {
+    notFound();
+  }
+
   return (
-    <Suspense fallback={<LoadingSkeleton />}>
-      <WorkOrderDetail id={params.id} />
-    </Suspense>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Detail Work Order: <span className="font-mono text-xl">{params.id.substring(0, 8)}...</span></h1>
+      <WorkOrderDetail workOrder={workOrder} />
+      {/* Hanya tampilkan tombol jika status masih 'pending' */}
+      {workOrder.status === 'pending' && <ActionButtons workOrderId={workOrder.id} />}
+    </div>
   );
 }
