@@ -53,20 +53,22 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
     fetchEquipments();
   }, [selectedJobType]);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsLoading(true);
-    setError(null);
+async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  setIsLoading(true);
+  setError(null);
 
-    // --- PERBAIKAN: Gunakan state 'selectedEquipment' untuk validasi ---
-    if (selectedEquipment) {
-        const equipmentPath = selectedEquipment.toLowerCase().replace(/\s+/g, '-');
-        router.push(`/dashboard/${equipmentPath}`);
-    } else {
-        setError("Silakan pilih equipment terlebih dahulu.");
-        setIsLoading(false);
-    }
+  if (selectedEquipment) {
+      // PERBAIKAN: Hapus bagian dalam kurung dan spasi ekstra dari nama equipment
+      const cleanName = selectedEquipment.replace(/\s*\(.*/, ''); 
+      const equipmentPath = cleanName.toLowerCase().replace(/\s+/g, '-');
+      
+      router.push(`/dashboard/${equipmentPath}`);
+  } else {
+      setError("Silakan pilih equipment terlebih dahulu.");
+      setIsLoading(false);
   }
+}
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-lg p-8 space-y-6 bg-white rounded-lg shadow-md">

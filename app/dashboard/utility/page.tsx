@@ -5,7 +5,8 @@ import { notFound } from 'next/navigation';
 
 async function getEquipmentData() {
     const supabase = createClient();
-    const equipmentName = 'Utility (genset, LVMDP, Trafo)'; // Sesuaikan nama ini
+    // Pastikan nama ini persis sama dengan yang ada di database Anda
+    const equipmentName = 'Utility (genset, LVMDP, Trafo)'; 
 
     const { data: equipment, error } = await supabase
         .from('equipments')
@@ -29,9 +30,7 @@ export default async function UtilityWorkOrderPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
-          Work Order - Utility (Genset, LVMDP, Trafo)
-        </h1>
+        {/* Komponen form yang benar sekarang akan dirender di sini */}
         <UtilityForm equipmentId={equipmentId} />
       </div>
     </div>

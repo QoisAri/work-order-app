@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation'; // Import usePathname
+import { usePathname } from 'next/navigation';
 import { LogoutButton } from '@/app/components/LogoutButton';
 import type { User } from '@supabase/supabase-js';
 
@@ -18,21 +18,27 @@ type SidebarProps = {
 };
 
 export default function Sidebar({ user, equipments, showEquipmentMenu }: SidebarProps) {
-  const pathname = usePathname(); // Dapatkan path URL saat ini
+  const pathname = usePathname();
   const userEmail = user?.email || null;
 
+  // Fungsi untuk membersihkan nama equipment menjadi format URL
+  const createUrlPath = (name: string) => {
+    let cleanName = name;
+    const parenthesisIndex = cleanName.indexOf('(');
+    if (parenthesisIndex !== -1) {
+      cleanName = cleanName.substring(0, parenthesisIndex).trim();
+    }
+    return cleanName.toLowerCase().replace(/\s+/g, '-');
+  };
+
   // --- LOGIKA BARU: Filter equipment yang akan ditampilkan ---
-  const displayedEquipments = showEquipmentMenu 
+  const finalEquipments = showEquipmentMenu
     ? equipments.filter(eq => {
-        // Ubah nama equipment menjadi format URL (e.g., "Land and Building" -> "land-and-building")
-        const equipmentPath = eq.nama_equipment.toLowerCase().replace(/\s+/g, '-');
+        const equipmentPath = createUrlPath(eq.nama_equipment);
         // Tampilkan hanya jika path URL saat ini mengandung path equipment tersebut
         return pathname.includes(equipmentPath);
       })
-    : [];
-
-  // Jika tidak ada equipment yang cocok (misal di halaman utama), tampilkan semua
-  const finalEquipments = displayedEquipments.length > 0 ? displayedEquipments : equipments;
+    : equipments;
 
 
   return (
@@ -53,10 +59,8 @@ export default function Sidebar({ user, equipments, showEquipmentMenu }: Sidebar
             Pilih Equipment
           </h2>
           <ul>
-            {/* --- PERUBAHAN: Gunakan daftar equipment yang sudah difilter --- */}
             {finalEquipments.map((eq) => {
-              const equipmentPath = eq.nama_equipment.toLowerCase().replace(/\s+/g, '-');
-              // Tambahkan style untuk menandai item yang aktif
+              const equipmentPath = createUrlPath(eq.nama_equipment);
               const isActive = pathname.includes(equipmentPath);
               return (
                 <li key={eq.id} className="mb-2">

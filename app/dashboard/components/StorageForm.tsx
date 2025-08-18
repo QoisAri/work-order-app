@@ -13,6 +13,10 @@ export default function StorageForm({ equipmentId }: StorageFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // --- PENAMBAHAN: State untuk validasi tanggal ---
+  const today = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState<string>('');
+
   const handleSubmit = async (formData: FormData) => {
     setError(null);
     setSuccess(null);
@@ -88,11 +92,25 @@ export default function StorageForm({ equipmentId }: StorageFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             <div>
               <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-              <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
+              <input 
+                type="date" 
+                name="estimasi_pengerjaan" 
+                id="estimasi_pengerjaan"
+                min={today}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" 
+              />
             </div>
             <div>
               <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-              <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
+              <input 
+                type="date" 
+                name="estimasi_selesai" 
+                id="estimasi_selesai" 
+                min={startDate || today}
+                disabled={!startDate}
+                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black disabled:bg-gray-100" 
+              />
             </div>
           </div>
         </div>

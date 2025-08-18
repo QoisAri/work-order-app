@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+// PERBAIKAN: Mengubah path import untuk mengatasi error resolusi modul
 import { createCompressorWorkOrder } from '../compressor/action'; // Impor Server Action
 
 type CompressorFormProps = {
@@ -12,6 +13,10 @@ export default function CompressorForm({ equipmentId }: CompressorFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // --- PENAMBAHAN: State untuk validasi tanggal ---
+  const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+  const [startDate, setStartDate] = useState<string>('');
 
   const handleSubmit = async (formData: FormData) => {
     setError(null);
@@ -36,6 +41,7 @@ export default function CompressorForm({ equipmentId }: CompressorFormProps) {
         setError(result.error);
       } else {
         setSuccess('Work Order berhasil dibuat!');
+        // Reset form or redirect user
       }
     });
   };
@@ -59,6 +65,7 @@ export default function CompressorForm({ equipmentId }: CompressorFormProps) {
         
         <input type="hidden" name="equipmentId" value={equipmentId} />
 
+        {/* Bagian form lainnya tetap sama... */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <label className="block text-base font-semibold text-gray-800 mb-4">Lokasi Pekerjaan Kompressor *</label>
           <div className="space-y-3">
@@ -109,14 +116,29 @@ export default function CompressorForm({ equipmentId }: CompressorFormProps) {
                 <textarea name="deskripsi" id="deskripsi" rows={4} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black placeholder:text-gray-500" placeholder="Deskripsi berisikan tipe kerusakan, jenis part equipment, atau penyebabnya..."></textarea>
             </div>
             
+            {/* --- PERUBAHAN: Validasi tanggal --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div>
                     <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-                    <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
+                    <input 
+                      type="date" 
+                      name="estimasi_pengerjaan" 
+                      id="estimasi_pengerjaan" 
+                      min={today} // Tidak bisa memilih hari kemarin
+                      onChange={(e) => setStartDate(e.target.value)} // Simpan tanggal mulai
+                      className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" 
+                    />
                 </div>
                 <div>
                     <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-                    <input type="date" name="estimasi_selesai" id="estimasi_selesai" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
+                    <input 
+                      type="date" 
+                      name="estimasi_selesai" 
+                      id="estimasi_selesai" 
+                      min={startDate || today} // Tidak bisa sebelum tanggal mulai atau hari ini
+                      disabled={!startDate} // Nonaktif jika tanggal mulai belum dipilih
+                      className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black disabled:bg-gray-100" 
+                    />
                 </div>
             </div>
         </div>
