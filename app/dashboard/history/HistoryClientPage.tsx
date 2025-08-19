@@ -3,10 +3,8 @@
 
 import { useState } from 'react';
 import FormattedDate from './FormattedDate';
-// PERBAIKAN 1: Impor tipe data utama dari file page.tsx
 import { type WorkOrderHistory } from './page';
 
-// PERBAIKAN 2: Definisikan tipe untuk props komponen ini
 type HistoryClientPageProps = {
   initialWorkOrders: WorkOrderHistory[];
 };
@@ -22,7 +20,6 @@ const getStatusBadge = (status: 'pending' | 'approved' | 'rejected') => {
   }
 };
 
-// Gunakan tipe yang sudah didefinisikan
 export default function HistoryClientPage({ initialWorkOrders }: HistoryClientPageProps) {
   const [workOrders] = useState(initialWorkOrders);
 
@@ -36,7 +33,8 @@ export default function HistoryClientPage({ initialWorkOrders }: HistoryClientPa
   }
 
   return (
-    <div className="bg-white shadow-sm border border-gray-200/75 rounded-xl overflow-hidden">
+    // PERBAIKAN: Bungkus tabel dengan div ini agar bisa scroll horizontal di mobile
+    <div className="overflow-x-auto bg-white shadow-sm border border-gray-200/75 rounded-xl">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
@@ -47,7 +45,6 @@ export default function HistoryClientPage({ initialWorkOrders }: HistoryClientPa
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {/* Karena TypeScript sekarang tahu tipe `workOrders`, maka `wo` juga dikenali */}
           {workOrders.map((wo) => (
             <tr key={wo.id} className="hover:bg-gray-50 transition-colors duration-150">
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
