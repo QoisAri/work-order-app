@@ -33,7 +33,6 @@ export default function LoginPage() {
   });
 
   return (
-    // PERBAIKAN DI SINI: hapus `min-h-screen` dari <main>
     <main className="flex w-full flex-col lg:flex-row bg-white">
       
       {/* Panel Kiri (Branding & Ilustrasi) */}
@@ -80,11 +79,16 @@ export default function LoginPage() {
         id="login-form" 
         className={`
           flex items-center justify-center transition-all duration-700 ease-in-out 
-          w-full bg-white min-h-screen lg:min-h-0  /* Tambahkan min-h-screen di sini untuk mobile */
+          w-full bg-white min-h-screen lg:min-h-0
           ${showLogin ? 'lg:w-1/2 p-6 sm:p-12' : 'lg:w-0 lg:p-0'}
         `}
       >
-        <div className={`w-full max-w-sm transition-opacity duration-300 ${showLogin ? 'opacity-100 delay-500' : 'opacity-0'}`}>
+        {/*
+          PERBAIKAN DI SINI:
+          - `opacity-100` akan membuat form selalu terlihat di mobile.
+          - `lg:opacity-0` akan menimpanya di desktop jika `showLogin` false.
+        */}
+        <div className={`w-full max-w-sm transition-opacity duration-300 opacity-100 ${showLogin ? 'lg:opacity-100 lg:delay-500' : 'lg:opacity-0'}`}>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Selamat Datang Kembali</h2>
             <p className="text-gray-600 mb-8">Silakan masuk untuk melanjutkan.</p>
             
