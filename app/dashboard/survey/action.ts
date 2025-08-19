@@ -19,8 +19,8 @@ export async function createSurveyWorkOrder(formData: FormData) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
     return { error: 'Sesi tidak ditemukan. Silakan login kembali.' };
   }
 
@@ -30,19 +30,34 @@ export async function createSurveyWorkOrder(formData: FormData) {
     const { data, error } = await supabase
       .from('work_orders')
       .insert({
-        user_id: session.user.id,
-        equipment_id: rawFormData.equipmentId,
+        user_id: user.id,
+        equipment_id: rawFormData.equipmentId as string,
         status: 'pending',
         details: rawFormData,
       })
-      .select();
+      .select('id') // Hanya perlu ID untuk notifikasi
+      .single(); // Mengambil satu baris data
 
     if (error) {
       throw new Error(error.message);
     }
 
+    // --- PENAMBAHAN: Panggil API Notifikasi Admin ---
+    if (data) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/notify-admin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workOrderId: data.id }),
+        });
+      } catch (notificationError) {
+        console.error("Gagal memicu notifikasi email admin:", notificationError);
+      }
+    }
+    // --- AKHIR PENAMBAHAN ---
+
     revalidatePath('/dashboard', 'layout');
-    return { success: true, data };
+    return { success: true };
 
   } catch (error: any) {
     return { error: error.message };

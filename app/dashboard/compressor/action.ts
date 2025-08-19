@@ -19,7 +19,6 @@ export async function createCompressorWorkOrder(formData: FormData) {
     }
   );
 
-  // --- PERBAIKAN: Menggunakan getUser() untuk validasi sesi ---
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return { error: 'Sesi tidak ditemukan atau tidak valid. Silakan login kembali.' };
@@ -31,22 +30,37 @@ export async function createCompressorWorkOrder(formData: FormData) {
     const { data, error } = await supabase
       .from('work_orders')
       .insert({
-        // --- PERBAIKAN: Menggunakan user.id dari getUser() ---
         user_id: user.id,
         equipment_id: rawFormData.equipmentId as string,
         status: 'pending',
         details: rawFormData,
       })
-      .select();
+      .select('id') // Hanya perlu ID untuk notifikasi
+      .single(); // Mengambil satu baris data
 
     if (error) {
-      // Log error yang lebih detail di server untuk debugging
       console.error('Supabase insert error:', error);
       throw new Error(error.message);
     }
 
+    // --- PENAMBAHAN: Panggil API Notifikasi Admin ---
+    if (data) {
+      try {
+        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/notify-admin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ workOrderId: data.id }),
+        });
+      } catch (notificationError) {
+        // Jika notifikasi gagal, jangan gagalkan proses utama.
+        // Cukup catat error-nya di log server.
+        console.error("Gagal memicu notifikasi email admin:", notificationError);
+      }
+    }
+    // --- AKHIR PENAMBAHAN ---
+
     revalidatePath('/dashboard', 'layout');
-    return { success: true, data };
+    return { success: true };
 
   } catch (error: any) {
     return { error: error.message };
