@@ -33,14 +33,15 @@ export default function LoginPage() {
   });
 
   return (
-    <main className="flex min-h-screen w-full flex-col lg:flex-row bg-white">
+    // PERBAIKAN DI SINI: hapus `min-h-screen` dari <main>
+    <main className="flex w-full flex-col lg:flex-row bg-white">
       
       {/* Panel Kiri (Branding & Ilustrasi) */}
       <div className={`
         flex items-center justify-center p-12 text-white relative overflow-hidden
         bg-gradient-to-tr from-blue-800 to-indigo-600
         transition-all duration-700 ease-in-out
-        w-full min-h-screen  /* <-- PERBAIKAN DI SINI */
+        w-full min-h-screen
         ${showLogin ? 'lg:w-1/2' : 'lg:w-full'}
       `}>
         <div className="z-10 w-full max-w-md text-center lg:text-left">
@@ -79,7 +80,7 @@ export default function LoginPage() {
         id="login-form" 
         className={`
           flex items-center justify-center transition-all duration-700 ease-in-out 
-          w-full bg-white
+          w-full bg-white min-h-screen lg:min-h-0  /* Tambahkan min-h-screen di sini untuk mobile */
           ${showLogin ? 'lg:w-1/2 p-6 sm:p-12' : 'lg:w-0 lg:p-0'}
         `}
       >
