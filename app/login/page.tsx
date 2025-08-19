@@ -24,7 +24,6 @@ const IconClipboard = () => (
 export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
-  // State untuk mengontrol tampilan form login di desktop
   const [showLogin, setShowLogin] = useState(false);
 
   supabase.auth.onAuthStateChange((event) => {
@@ -41,7 +40,7 @@ export default function LoginPage() {
         flex items-center justify-center p-12 text-white relative overflow-hidden
         bg-gradient-to-tr from-blue-800 to-indigo-600
         transition-all duration-700 ease-in-out
-        w-full lg:min-h-screen
+        w-full min-h-screen  /* <-- PERBAIKAN DI SINI */
         ${showLogin ? 'lg:w-1/2' : 'lg:w-full'}
       `}>
         <div className="z-10 w-full max-w-md text-center lg:text-left">
@@ -52,7 +51,6 @@ export default function LoginPage() {
                 Kelola dan lacak semua work order Anda dengan mudah, efisien, dan terstruktur.
             </p>
             
-            {/* Tombol untuk Desktop */}
             <button
               onClick={() => setShowLogin(true)}
               className={`
@@ -65,7 +63,6 @@ export default function LoginPage() {
               Ayo Login
             </button>
             
-            {/* Tombol untuk Mobile (scroll down) */}
             <a
               href="#login-form"
               className="lg:hidden inline-flex items-center justify-center px-8 py-3 font-bold text-lg text-indigo-600 bg-white rounded-lg hover:bg-gray-200 transition-colors"
