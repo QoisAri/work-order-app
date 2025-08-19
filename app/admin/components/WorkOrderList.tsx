@@ -5,9 +5,10 @@ import { type WorkOrder } from './AdminTabs';
 type WorkOrderListProps = {
   workOrders: WorkOrder[];
   activeTab: 'pending' | 'approved' | 'rejected';
+  onDelete: (id: string) => void;
 };
 
-export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListProps) {
+export default function WorkOrderList({ workOrders, activeTab, onDelete }: WorkOrderListProps) {
   if (workOrders.length === 0) {
     return <p className="text-center text-gray-500">Tidak ada work order yang ditemukan.</p>;
   }
@@ -20,6 +21,7 @@ export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListPr
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               ID Work Order
             </th>
+            {/* PERBAIKAN: Kolom Nomor WO hanya tampil di tab 'approved' */}
             {activeTab === 'approved' && (
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Nomor WO
@@ -34,8 +36,8 @@ export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListPr
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Tanggal Dibuat
             </th>
-            <th scope="col" className="relative px-6 py-3">
-              <span className="sr-only">Aksi</span>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Aksi
             </th>
           </tr>
         </thead>
@@ -43,12 +45,12 @@ export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListPr
           {workOrders.map((wo) => (
             <tr key={wo.id}>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-500">{wo.id.substring(0, 8)}...</td>
+              {/* PERBAIKAN: Data Nomor WO hanya dirender di tab 'approved' */}
               {activeTab === 'approved' && (
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                  {wo.wo_number || 'N/A'}
+                  {wo.wo_number || '-'}
                 </td>
               )}
-              {/* PERBAIKAN: Mengakses properti langsung dari objek */}
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{wo.profiles?.full_name || 'N/A'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{wo.equipments?.nama_equipment || 'N/A'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -58,10 +60,18 @@ export default function WorkOrderList({ workOrders, activeTab }: WorkOrderListPr
                   year: 'numeric',
                 })}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <td className="px-6 py-4 whitespace-nowrap text-left text-sm font-medium space-x-4">
                 <Link href={`/admin/work-orders/${wo.id}`} className="text-indigo-600 hover:text-indigo-900">
                   Lihat Detail
                 </Link>
+                {(activeTab === 'approved' || activeTab === 'rejected') && (
+                  <button
+                    onClick={() => onDelete(wo.id)}
+                    className="text-red-600 hover:text-red-900"
+                  >
+                    Hapus
+                  </button>
+                )}
               </td>
             </tr>
           ))}

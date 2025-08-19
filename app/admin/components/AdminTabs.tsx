@@ -11,16 +11,12 @@ export type WorkOrder = {
   created_at: string;
   status: 'pending' | 'approved' | 'rejected';
   wo_number: string | null;
-  // PERBAIKAN: Relasi one-to-one menghasilkan objek, bukan array
   profiles: { full_name: string | null; } | null;
   equipments: { nama_equipment: string | null; } | null;
 };
 
-
-// Tipe data untuk status tab
 type TabStatus = 'pending' | 'approved' | 'rejected';
 
-// Fungsi helper untuk memvalidasi status dari URL
 const getValidTab = (status: string | null): TabStatus => {
   if (status === 'approved' || status === 'rejected') {
     return status;
@@ -28,14 +24,13 @@ const getValidTab = (status: string | null): TabStatus => {
   return 'pending';
 };
 
-// Komponen utama yang berisi logika
 function TabsComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
   const activeTab = (searchParams.get('status') === 'approved' || searchParams.get('status') === 'rejected') 
-                    ? searchParams.get('status') as 'approved' | 'rejected' 
-                    : 'pending';
+                      ? searchParams.get('status') as 'approved' | 'rejected' 
+                      : 'pending';
 
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,19 +64,44 @@ function TabsComponent() {
     router.push(`/admin?status=${tab}`);
   };
 
+  // --- PENAMBAHAN: Fungsi untuk menghapus Work Order ---
+  const handleDelete = async (id: string) => {
+    // Konfirmasi sebelum menghapus
+    if (!window.confirm('Apakah Anda yakin ingin menghapus Work Order ini?')) {
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('work_orders')
+      .delete()
+      .match({ id });
+
+    if (error) {
+      console.error('Error deleting work order:', error);
+      alert('Gagal menghapus work order.');
+    } else {
+      // Hapus dari state agar UI terupdate
+      setWorkOrders(workOrders.filter(wo => wo.id !== id));
+      alert('Work Order berhasil dihapus.');
+    }
+  };
+
   const renderContent = () => {
     if (isLoading) return <p className="text-center text-gray-500">Memuat data...</p>;
     if (error) return <p className="text-center text-red-500">{error}</p>;
-    return <WorkOrderList workOrders={workOrders} activeTab={activeTab} />;
+    // --- PENAMBAHAN: Kirim fungsi handleDelete ke WorkOrderList ---
+    return <WorkOrderList workOrders={workOrders} activeTab={activeTab} onDelete={handleDelete} />;
   };
 
   return (
     <div>
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+          {/* Tombol tab tetap sama */}
           <button
             onClick={() => handleTabClick('pending')}
-            className={`${
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'pending'
                 ? 'border-indigo-500 text-indigo-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -91,7 +111,7 @@ function TabsComponent() {
           </button>
           <button
             onClick={() => handleTabClick('approved')}
-            className={`${
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'approved'
                 ? 'border-indigo-500 text-indigo-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -101,7 +121,7 @@ function TabsComponent() {
           </button>
           <button
             onClick={() => handleTabClick('rejected')}
-            className={`${
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'rejected'
                 ? 'border-indigo-500 text-indigo-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -118,7 +138,6 @@ function TabsComponent() {
   );
 }
 
-// Komponen wrapper untuk menggunakan Suspense
 export default function AdminTabs() {
   return (
     <Suspense fallback={<div>Loading tabs...</div>}>
