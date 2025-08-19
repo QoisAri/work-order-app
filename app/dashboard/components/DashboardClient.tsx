@@ -2,10 +2,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import Sidebar from './sidebar'; // Kita akan perbarui Sidebar ini selanjutnya
+import Sidebar from './sidebar';
 import type { User } from '@supabase/supabase-js';
 
-// Definisikan tipe data agar sesuai dengan yang dikirim dari layout
+// Tipe data (pastikan sama dengan yang sebelumnya)
 type Equipment = {
   id: string;
   nama_equipment: string;
@@ -25,20 +25,20 @@ type DashboardClientProps = {
 
 export default function DashboardClient({ user, equipments, profile, children }: DashboardClientProps) {
   const pathname = usePathname();
-
-  // Logika untuk mendeteksi halaman form equipment dipindahkan ke sini
-const showEquipmentMenu = pathname.split('/').length > 2 && 
-                          pathname !== '/dashboard/create' &&
-                          !pathname.startsWith('/dashboard/admin'); // Tambahkan path lain jika perlu
+  
+  // Logika Anda untuk menampilkan menu equipment (sudah benar)
+  const showEquipmentMenu = pathname.startsWith('/dashboard/') && 
+                            pathname !== '/dashboard/history' && 
+                            pathname !== '/dashboard/create';
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
       <Sidebar 
-  user={user} 
-  equipments={equipments} 
-  showEquipmentMenu={showEquipmentMenu} 
+        user={user} 
+        equipments={equipments} 
+        showEquipmentMenu={showEquipmentMenu} 
       />
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
         {children}
       </main>
     </div>
