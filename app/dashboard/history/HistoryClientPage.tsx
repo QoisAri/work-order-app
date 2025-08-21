@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link'; // Impor Link
 import FormattedDate from './FormattedDate';
 import { type WorkOrderHistory } from './page';
 
@@ -10,6 +11,7 @@ type HistoryClientPageProps = {
 };
 
 const getStatusBadge = (status: 'pending' | 'approved' | 'rejected') => {
+  // ... (fungsi ini tetap sama)
   switch (status) {
     case 'approved':
       return <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>;
@@ -33,7 +35,6 @@ export default function HistoryClientPage({ initialWorkOrders }: HistoryClientPa
   }
 
   return (
-    // PERBAIKAN: Bungkus tabel dengan div ini agar bisa scroll horizontal di mobile
     <div className="overflow-x-auto bg-white shadow-sm border border-gray-200/75 rounded-xl">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
@@ -42,6 +43,8 @@ export default function HistoryClientPage({ initialWorkOrders }: HistoryClientPa
             <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Equipment</th>
             <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nomor WO</th>
             <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+            {/* PERBAIKAN: Tambah kolom Aksi */}
+            <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -53,6 +56,17 @@ export default function HistoryClientPage({ initialWorkOrders }: HistoryClientPa
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{wo.equipments?.nama_equipment || 'N/A'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">{wo.wo_number || '-'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getStatusBadge(wo.status)}</td>
+              {/* PERBAIKAN: Tambah sel untuk Aksi */}
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                {(wo.status === 'approved' || wo.status === 'rejected') && (
+                  <Link 
+                    href={`/dashboard/history/${wo.id}`}
+                    className="text-indigo-600 hover:text-indigo-800"
+                  >
+                    Lihat Detail
+                  </Link>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

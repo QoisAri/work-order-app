@@ -35,15 +35,15 @@ export async function createCompressorWorkOrder(formData: FormData) {
         status: 'pending',
         details: rawFormData,
       })
-      .select('id') // Hanya perlu ID untuk notifikasi
-      .single(); // Mengambil satu baris data
+      .select('id')
+      .single();
 
     if (error) {
       console.error('Supabase insert error:', error);
-      throw new Error(error.message);
+      // Jika ada error dari Supabase, kembalikan dalam format yang benar
+      return { error: error.message };
     }
 
-    // --- PENAMBAHAN: Panggil API Notifikasi Admin ---
     if (data) {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/notify-admin`, {
@@ -52,15 +52,13 @@ export async function createCompressorWorkOrder(formData: FormData) {
           body: JSON.stringify({ workOrderId: data.id }),
         });
       } catch (notificationError) {
-        // Jika notifikasi gagal, jangan gagalkan proses utama.
-        // Cukup catat error-nya di log server.
         console.error("Gagal memicu notifikasi email admin:", notificationError);
       }
     }
-    // --- AKHIR PENAMBAHAN ---
 
     revalidatePath('/dashboard', 'layout');
-    return { success: true };
+    // PERBAIKAN UTAMA: Kembalikan objek dengan error: null saat berhasil
+    return { error: null };
 
   } catch (error: any) {
     return { error: error.message };

@@ -1,7 +1,7 @@
 // app/admin/work-orders/[id]/WorkOrderDetail.tsx
-import DownloadButton from './DownloadButton';
+import DownloadButton from './DownloadButton'; // <-- PASTIKAN TOMBOL DI-IMPOR
 
-// Komponen kecil untuk menampilkan baris detail agar rapi
+// Komponen kecil untuk menampilkan baris detail
 const DetailRow = ({ label, value }: { label: string, value: React.ReactNode }) => (
   <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
     <dt className="text-sm font-medium leading-6 text-gray-500">{label}</dt>
@@ -12,32 +12,28 @@ const DetailRow = ({ label, value }: { label: string, value: React.ReactNode }) 
 export default function WorkOrderDetail({ workOrder }: { workOrder: any }) {
   const details = workOrder.details || {};
 
-  // Kamus label untuk detail pekerjaan yang dinamis
+  // Kamus label untuk detail pekerjaan
   const detailLabels: { [key: string]: string } = {
     jenis_equipment: 'Jenis equipment',
     estimasi_selesai: 'Estimasi selesai',
     lokasi_equipment: 'Lokasi equipment',
     deskripsi_pekerjaan: 'Deskripsi pekerjaan',
     estimasi_pengerjaan: 'Estimasi pengerjaan',
-    // Tambahkan semua label dari form-form Anda di sini
-    deskripsi: 'Deskripsi',
-    storage_no: 'Nomor Storage',
-    jenis_maintenance: 'Jenis Maintenance',
-    nomor_mrs: 'Nomor MRS',
-    lokasi_mrs: 'Lokasi MRS',
-    kerusakan_equipment: 'Kerusakan',
-    // dst.
+    // Tambahkan label lain dari semua form Anda di sini
   };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mt-4">
-      <div className="px-4 sm:px-0 flex justify-between items-center flex-wrap gap-y-4">
+      {/* BAGIAN HEADER DETAIL */}
+      <div className="px-4 sm:px-0 flex justify-between items-center">
         <div>
           <h3 className="text-base font-semibold leading-7 text-gray-900">Informasi Umum</h3>
         </div>
-        {/* Tombol Unduh dipanggil di sini jika statusnya 'approved' */}
-        {workOrder.status === 'approved' && <DownloadButton workOrder={workOrder} />}
+        {/* PERBAIKAN: Tombol Unduh dipanggil dan ditampilkan di sini */}
+        <DownloadButton workOrder={workOrder} />
       </div>
+
+      {/* INFORMASI UMUM */}
       <div className="mt-6 border-t border-gray-200">
         <dl className="divide-y divide-gray-200">
           <DetailRow label="Nomor Work Order" value={workOrder.wo_number} />
@@ -55,21 +51,7 @@ export default function WorkOrderDetail({ workOrder }: { workOrder: any }) {
         </dl>
       </div>
       
-      {/* Tampilkan Alasan Penolakan jika ada */}
-      {workOrder.status === 'rejected' && workOrder.rejection_reason && (
-        <>
-            <div className="px-4 sm:px-0 mt-8">
-                <h3 className="text-base font-semibold leading-7 text-red-700">Alasan Penolakan</h3>
-            </div>
-            <div className="mt-6 border-t border-gray-200">
-                <dl>
-                    <DetailRow label="Alasan" value={workOrder.rejection_reason} />
-                </dl>
-            </div>
-        </>
-      )}
-
-      {/* Tampilkan Detail Pekerjaan */}
+      {/* DETAIL PEKERJAAN */}
       <div className="px-4 sm:px-0 mt-8">
         <h3 className="text-base font-semibold leading-7 text-gray-900">Detail Pekerjaan</h3>
       </div>
@@ -78,9 +60,7 @@ export default function WorkOrderDetail({ workOrder }: { workOrder: any }) {
           {Object.keys(details).map(key => {
             if (detailLabels[key]) {
               const value = Array.isArray(details[key]) ? details[key].join(', ') : details[key];
-              if (value) {
-                return <DetailRow key={key} label={detailLabels[key]} value={value} />;
-              }
+              return <DetailRow key={key} label={detailLabels[key]} value={value} />;
             }
             return null;
           })}
