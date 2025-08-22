@@ -108,8 +108,6 @@ export default function LoginPage() {
                 localization={{
                     variables: {
                         sign_in: { email_label: 'Alamat Email', password_label: 'Kata Sandi', button_label: 'Masuk' },
-                        sign_up: { email_label: 'Alamat Email', password_label: 'Buat Kata Sandi', button_label: 'Daftar', link_text: 'Belum punya akun? Daftar' },
-                        forgotten_password: { email_label: 'Alamat Email', button_label: 'Kirim instruksi', link_text: 'Lupa kata sandi?' },
                     },
                 }}
             />

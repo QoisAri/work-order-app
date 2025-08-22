@@ -88,7 +88,7 @@ async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         <input name="no_wa" id="no_wa" required defaultValue={initialData.no_wa || ''} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
       </div>
         <div>
-        <label htmlFor="sub_depart" className="block text-sm font-medium text-gray-700">User Sub Depart</label>
+        <label htmlFor="sub_depart" className="block text-sm font-medium text-gray-700">Departemen</label>
         <select name="sub_depart" id="sub_depart" required defaultValue={initialData.sub_depart || ''} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
           <option value="" disabled>Pilih Departemen...</option>
           {departments.map(dept => (

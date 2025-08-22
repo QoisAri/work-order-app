@@ -25,30 +25,47 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
+    
+    // --- PERBAIKAN 1 DI SINI ---
+    // Baca 'nama_lengkap' dari body, bukan 'full_name'
+    const { full_name, sub_depart, no_wa, ...workOrderData } = body;
 
-    // Simpan data ke tabel 'work_orders'
-    // Perhatikan: kita tidak lagi memasukkan equipment_id di sini
-    const { data, error } = await supabase
+    // Lakukan UPDATE pada tabel 'profiles' terlebih dahulu
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        // --- PERBAIKAN 2 DI SINI ---
+        // Simpan data 'nama_lengkap' ke dalam kolom 'full_name'
+        full_name: full_name, 
+        sub_depart: sub_depart,
+        no_wa: no_wa,
+      })
+      .eq('id', user.id);
+
+    if (profileError) {
+      throw new Error(`Gagal memperbarui profil: ${profileError.message}`);
+    }
+
+    // Simpan sisa data ke tabel 'work_orders'
+    const { data, error: workOrderError } = await supabase
       .from('work_orders')
       .insert([
         {
-          ...body,
+          ...workOrderData,
           status: 'pending',
           user_id: user.id,
-          // equipment_id sengaja dibiarkan kosong (NULL)
         },
       ])
-      .select('id') // <-- PENTING: Ambil ID dari WO yang baru dibuat
+      .select('id')
       .single();
 
-    if (error) {
-      throw new Error(`Gagal menyimpan ke database: ${error.message}`);
+    if (workOrderError) {
+      throw new Error(`Gagal menyimpan work order: ${workOrderError.message}`);
     }
 
-    // Kirim respons berhasil beserta ID unik dari WO yang baru
     return NextResponse.json({ 
       message: 'Work Order berhasil dibuat.', 
-      data: data // Ini akan berisi { id: '...' }
+      data: data 
     }, { status: 201 });
 
   } catch (err: any) {
