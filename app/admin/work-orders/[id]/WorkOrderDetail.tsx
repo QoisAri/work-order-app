@@ -96,7 +96,8 @@ const handleMarkAsDone = async () => {
           <dl className="divide-y divide-gray-200">
             <DetailRow label="Nomor Work Order" value={workOrder.wo_number} />
             <DetailRow label="Pemohon" value={workOrder.profiles?.full_name} />
-            <DetailRow label="Status" value={
+            <DetailRow label="Division" value={workOrder.profiles?.sub_depart} />
+            <DetailRow label="Status" value={ 
               <span className={`px-2 py-1 text-xs font-bold rounded-full ${
                   workOrder.status === 'approved' ? 'bg-green-100 text-green-800' :
                   workOrder.status === 'rejected' ? 'bg-red-100 text-red-800' :

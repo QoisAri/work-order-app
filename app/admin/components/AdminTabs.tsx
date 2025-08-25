@@ -13,7 +13,10 @@ export type WorkOrder = {
   created_at: string;
   status: 'pending' | 'approved' | 'rejected' | 'done';
   wo_number: string | null;
-  profiles: { full_name: string | null; } | null;
+   profiles: { 
+    full_name: string | null;
+    sub_depart: string | null; // <-- Tambahkan sub_depart di sini
+  } | null;
   equipments: { nama_equipment: string | null; } | null;
   details?: any; 
 };
@@ -43,7 +46,7 @@ function TabsComponent() {
       setIsLoading(true);
       setError(null);
       const supabase = createClient();
-      let query = supabase.from('work_orders').select(`id, created_at, status, wo_number, details, profiles:user_id(full_name), equipments:equipment_id(nama_equipment)`);
+      let query = supabase.from('work_orders').select(`id, created_at, status, wo_number, details, profiles:user_id(full_name,sub_depart), equipments:equipment_id(nama_equipment)`);
       if (activeTab === 'approved') {
         query = query.in('status', ['approved', 'done']);
       } else {
@@ -262,4 +265,4 @@ export default function AdminTabs() {
       <TabsComponent />
     </Suspense>
   );
-}
+} 

@@ -15,9 +15,8 @@ export default async function WorkOrderDetailPage({ params }: PageProps) {
     .from('work_orders')
     .select(`
       *,
-      profiles ( full_name, email ),
+      profiles ( full_name, email, sub_depart ),
       equipments ( nama_equipment ),
-      sub_departments ( nama_departemen ),
       job_types ( nama_pekerjaan )
     `)
     .eq('id', params.id)

@@ -9,10 +9,13 @@ type WorkOrderData = {
   created_at: string;
   approved_at?: string | null;
   wo_number?: string | null;
-  profiles?: { full_name?: string | null; } | null;
+  profiles?: { 
+    full_name?: string | null;
+    sub_depart?: string | null; // <-- Tambahkan sub_depart
+  } | null;
   equipments?: { nama_equipment?: string | null; } | null;
   // 💡 Tambahkan relasi ini
-  sub_departments?: { nama_sub_departemen?: string | null; } | null;
+  sub_departments?: { nama_departemen?: string | null; } | null;
   job_types?: { nama_pekerjaan?: string | null; } | null; 
   details?: any;
 };
@@ -35,10 +38,8 @@ export default function DownloadButton({ workOrder }: { workOrder: WorkOrderData
       woNumber: workOrder.wo_number || '-',
       requestBy: workOrder.profiles?.full_name || 'N/A',
       noWa: details.no_wa || '',
-      // ✅ Ambil data dari relasi 'sub_departments'
-      division: workOrder.sub_departments?.nama_sub_departemen || 'N/A', 
+      division: workOrder.profiles?.sub_depart || 'N/A',
       equipment: workOrder.equipments?.nama_equipment || 'N/A',
-      // ✅ Ambil data dari relasi 'job_types'
       jenisPekerjaan: workOrder.job_types?.nama_pekerjaan || 'N/A',
       estimasiPengerjaan: formatDateForDoc(details.estimasi_pengerjaan),
       estimasiSelesai: formatDateForDoc(details.estimasi_selesai),

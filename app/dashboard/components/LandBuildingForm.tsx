@@ -1,40 +1,30 @@
-// app/dashboard/components/LandBuildingForm.tsx
 'use client';
 
 import { useState, useTransition } from 'react';
-// PERBAIKAN: Mengubah path import untuk mengatasi error resolusi modul
-import { createLandBuildingWorkOrder } from '../land-and-building/action'; // Impor Server Action
+import { createLandBuildingWorkOrder } from '../land-and-building/action';
 
 type LandBuildingFormProps = {
   equipmentId: string;
+  jobTypeId: string | null;
 };
 
-export default function LandBuildingForm({ equipmentId }: LandBuildingFormProps) {
+export default function LandBuildingForm({ equipmentId, jobTypeId }: LandBuildingFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  // --- PENAMBAHAN: State untuk validasi tanggal ---
-  const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0];
   const [startDate, setStartDate] = useState<string>('');
 
-  const handleSubmit = async (formData: FormData) => {
-    setError(null);
-    setSuccess(null);
-
-    // Menggabungkan nilai "Yang lain" ke dalam FormData
-    const maintenanceLainValue = formData.get('maintenance_lain');
-    if (maintenanceLainValue) {
-      formData.append('equipment_maintenance', `Yang lain: ${maintenanceLainValue}`);
-    }
-    formData.delete('maintenance_lain');
-
+  const formAction = async (formData: FormData) => {
     startTransition(async () => {
       const result = await createLandBuildingWorkOrder(formData);
-      if (result.error) {
+      if (result?.error) {
         setError(result.error);
+        setSuccess(null);
       } else {
         setSuccess('Work Order berhasil dibuat!');
+        setError(null);
+        // Anda bisa menambahkan reset form atau navigasi di sini
       }
     });
   };
@@ -48,13 +38,13 @@ export default function LandBuildingForm({ equipmentId }: LandBuildingFormProps)
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">05. Land Of Building</h1>
-      <form action={handleSubmit} className="space-y-6">
+      <form action={formAction} className="space-y-6">
         {error && <p className="text-red-500 font-semibold text-center">{error}</p>}
         {success && <p className="text-green-500 font-semibold text-center">{success}</p>}
 
         <input type="hidden" name="equipmentId" value={equipmentId} />
+        <input type="hidden" name="job_type_id" value={jobTypeId || ''} />
 
-        {/* Bagian form lainnya tetap sama... */}
         <div className="bg-white p-6 rounded-lg shadow-md">
           <label htmlFor="lokasi_perbaikan" className="block text-base font-semibold text-gray-800">Lokasi Perbaikan Land of Building *</label>
           <select name="lokasi_perbaikan" id="lokasi_perbaikan" required defaultValue="" className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black">
@@ -73,41 +63,26 @@ export default function LandBuildingForm({ equipmentId }: LandBuildingFormProps)
               </div>
             ))}
             <div className="flex items-center">
-              <label htmlFor="maintenance-lain-cb" className="ml-3 block text-sm text-gray-900">Yang lain:</label>
-              <input type="text" name="maintenance_lain" className="ml-2 w-48 rounded-md border-gray-300 shadow-sm text-sm text-black placeholder:text-gray-500" />
+              <label className="ml-3 block text-sm text-gray-900">Yang lain:</label>
+              <input type="text" name="maintenance_lain" className="ml-2 w-48 rounded-md border-gray-300 shadow-sm text-sm text-black" />
             </div>
           </div>
         </div>
         
         <div className="bg-white p-6 rounded-lg shadow-md space-y-4">
             <div>
-                <label htmlFor="deskripsi_maintenance" className="block text-base font-semibold text-gray-800">Deskripsi Maintenance Land of Building *</label>
-                <textarea name="deskripsi_maintenance" id="deskripsi_maintenance" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black placeholder:text-gray-500"></textarea>
+              <label htmlFor="deskripsi_maintenance" className="block text-base font-semibold text-gray-800">Deskripsi Maintenance Land of Building *</label>
+              <textarea name="deskripsi_maintenance" id="deskripsi_maintenance" rows={5} required className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black"></textarea>
             </div>
             
-            {/* --- PERUBAHAN: Validasi tanggal --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <div>
-                    <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
-                    <input 
-                      type="date" 
-                      name="estimasi_pengerjaan" 
-                      id="estimasi_pengerjaan" 
-                      min={today} // Tidak bisa memilih hari kemarin
-                      onChange={(e) => setStartDate(e.target.value)} // Simpan tanggal mulai
-                      className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" 
-                    />
+                  <label htmlFor="estimasi_pengerjaan" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Pengerjaan</label>
+                  <input type="date" name="estimasi_pengerjaan" id="estimasi_pengerjaan" min={today} onChange={(e) => setStartDate(e.target.value)} className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black" />
                 </div>
                 <div>
-                    <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
-                    <input 
-                      type="date" 
-                      name="estimasi_selesai" 
-                      id="estimasi_selesai" 
-                      min={startDate || today} // Tidak bisa sebelum tanggal mulai atau hari ini
-                      disabled={!startDate} // Nonaktif jika tanggal mulai belum dipilih
-                      className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black disabled:bg-gray-100" 
-                    />
+                  <label htmlFor="estimasi_selesai" className="block text-base font-semibold text-gray-800">Estimasi Tanggal Selesai</label>
+                  <input type="date" name="estimasi_selesai" id="estimasi_selesai" min={startDate || today} disabled={!startDate} className="mt-2 block w-full rounded-md border-gray-300 shadow-sm text-black disabled:bg-gray-100" />
                 </div>
             </div>
         </div>

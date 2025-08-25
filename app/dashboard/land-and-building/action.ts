@@ -1,7 +1,6 @@
-// app/dashboard/land-and-building/action.ts
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
@@ -12,37 +11,52 @@ export async function createLandBuildingWorkOrder(formData: FormData) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
+        get(name: string) { return cookieStore.get(name)?.value; },
+        set(name: string, value: string, options: CookieOptions) { cookieStore.set({ name, value, ...options }); },
+        remove(name: string, options: CookieOptions) { cookieStore.delete({ name, ...options }); },
       },
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: 'Sesi tidak ditemukan. Silakan login kembali.' };
-  }
-
-  const rawFormData = Object.fromEntries(formData.entries());
-
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { error: 'Sesi tidak ditemukan. Silakan login kembali.' };
+    }
+
+    const equipmentId = formData.get('equipmentId') as string;
+    let jobTypeId = formData.get('job_type_id') as string | null;
+
+    // Pengaman: Jika jobTypeId adalah string kosong, ubah menjadi null
+    if (jobTypeId === '') {
+      jobTypeId = null;
+    }
+
+    // Gabungkan 'maintenance_lain' jika ada
+    const maintenanceLainValue = formData.get('maintenance_lain');
+    if (maintenanceLainValue) {
+        formData.append('equipment_maintenance', `Yang lain: ${maintenanceLainValue}`);
+    }
+    formData.delete('maintenance_lain');
+    
+    const details = Object.fromEntries(formData.entries());
+
     const { data, error } = await supabase
       .from('work_orders')
       .insert({
         user_id: user.id,
-        equipment_id: rawFormData.equipmentId as string,
+        equipment_id: equipmentId,
+        job_type_id: jobTypeId,
         status: 'pending',
-        details: rawFormData,
+        details: details,
       })
-      .select('id') // Hanya perlu ID untuk notifikasi
-      .single(); // Mengambil satu baris data
+      .select('id')
+      .single();
 
     if (error) {
       throw new Error(error.message);
     }
 
-    // --- PENAMBAHAN: Panggil API Notifikasi Admin ---
     if (data) {
       try {
         await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/notify-admin`, {
@@ -51,10 +65,9 @@ export async function createLandBuildingWorkOrder(formData: FormData) {
           body: JSON.stringify({ workOrderId: data.id }),
         });
       } catch (notificationError) {
-        console.error("Gagal memicu notifikasi email admin:", notificationError);
+        console.error("Gagal memicu notifikasi:", notificationError);
       }
     }
-    // --- AKHIR PENAMBAHAN ---
 
     revalidatePath('/dashboard', 'layout');
     return { success: true };

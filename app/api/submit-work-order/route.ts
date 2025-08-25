@@ -26,17 +26,14 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     
-    // --- PERBAIKAN 1 DI SINI ---
-    // Baca 'nama_lengkap' dari body, bukan 'full_name'
-    const { full_name, sub_depart, no_wa, ...workOrderData } = body;
+    // Pisahkan data untuk tabel 'profiles' dan 'work_orders'
+    const { full_name, sub_depart, no_wa, job_type_id, ...workOrderDetails } = body;
 
-    // Lakukan UPDATE pada tabel 'profiles' terlebih dahulu
+    // 1. Lakukan UPDATE pada tabel 'profiles'
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
-        // --- PERBAIKAN 2 DI SINI ---
-        // Simpan data 'nama_lengkap' ke dalam kolom 'full_name'
-        full_name: full_name, 
+        full_name: full_name,
         sub_depart: sub_depart,
         no_wa: no_wa,
       })
@@ -46,12 +43,14 @@ export async function POST(request: Request) {
       throw new Error(`Gagal memperbarui profil: ${profileError.message}`);
     }
 
-    // Simpan sisa data ke tabel 'work_orders'
+    // 2. Simpan data ke tabel 'work_orders'
     const { data, error: workOrderError } = await supabase
       .from('work_orders')
       .insert([
         {
-          ...workOrderData,
+          // Gabungkan detail spesifik (jika ada) dengan field utama
+          details: workOrderDetails,
+          job_type_id: job_type_id,
           status: 'pending',
           user_id: user.id,
         },
