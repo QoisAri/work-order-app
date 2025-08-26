@@ -18,6 +18,7 @@ export type WorkOrder = {
     sub_depart: string | null; // <-- Tambahkan sub_depart di sini
   } | null;
   equipments: { nama_equipment: string | null; } | null;
+  job_types: { nama_pekerjaan: string | null; } | null;
   details?: any; 
 };
 
@@ -46,7 +47,7 @@ function TabsComponent() {
       setIsLoading(true);
       setError(null);
       const supabase = createClient();
-      let query = supabase.from('work_orders').select(`id, created_at, status, wo_number, details, profiles:user_id(full_name,sub_depart), equipments:equipment_id(nama_equipment)`);
+      let query = supabase.from('work_orders').select(`id, created_at, status, wo_number, details, profiles:user_id(full_name,sub_depart), equipments:equipment_id(nama_equipment), job_types:job_type_id(nama_pekerjaan)`);
       if (activeTab === 'approved') {
         query = query.in('status', ['approved', 'done']);
       } else {
@@ -92,6 +93,7 @@ function TabsComponent() {
       'Nomor WO': wo.wo_number,
       'Status': wo.status === 'done' ? 'Selesai' : 'Disetujui',
       'Pemohon': wo.profiles?.full_name,
+      'Tipe Pekerjaan': wo.job_types?.nama_pekerjaan,
       'Equipment': wo.equipments?.nama_equipment,
       'Tanggal Dibuat': new Date(wo.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
       'Estimasi Pengerjaan': wo.details?.estimasi_pengerjaan ? new Date(wo.details.estimasi_pengerjaan).toLocaleDateString('id-ID') : '-',

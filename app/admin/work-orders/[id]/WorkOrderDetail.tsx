@@ -1,9 +1,22 @@
-'use client'; // <-- Tambahkan ini di baris paling atas
+'use client'; 
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DownloadButton from './DownloadButton';
-import { markAsDone } from './actions'; // <-- Kita akan buat file ini
+import DownloadButton from '../../components/DownloadButton'; // <-- 1. Import komponen baru
+
+// Asumsi file 'actions' ada di direktori yang benar
+// import { markAsDone } from '../dashboard/work-orders/actions'; 
+
+// --- DUMMY ACTION UNTUK CONTOH ---
+// Ganti dengan import asli Anda
+async function markAsDone(id: string) {
+  console.log(`Marking work order ${id} as done.`);
+  // Simulasi network delay
+  await new Promise(resolve => setTimeout(resolve, 1000)); 
+  // return { success: true }; // Uncomment jika action Anda mengembalikan objek
+}
+// ------------------------------------
+
 
 // Komponen kecil untuk menampilkan baris detail agar rapi
 const DetailRow = ({ label, value }: { label: string, value: React.ReactNode }) => (
@@ -49,12 +62,10 @@ const handleMarkAsDone = async () => {
       setIsModalOpen(false);
       router.refresh(); // Refresh halaman untuk melihat status baru
     } catch (error) {
-      // Tampilkan error jika gagal
       alert((error as Error).message);
       setIsModalOpen(false);
     } finally {
-      // Bagian ini akan selalu dijalankan, baik sukses maupun gagal
-      setIsLoading(false); // <-- Ini memastikan tombol tidak akan nyangkut
+      setIsLoading(false);
     }
   };
 
@@ -80,8 +91,13 @@ const handleMarkAsDone = async () => {
             <h3 className="text-base font-semibold leading-7 text-gray-900">Informasi Umum</h3>
           </div>
           <div className="flex items-center gap-4">
-            {workOrder.status === 'approved' && <DownloadButton workOrder={workOrder} />}
-            {/* Tombol Selesaikan Pekerjaan */}
+            
+            {/* --- 2. Gunakan komponen DownloadButton --- */}
+            <DownloadButton 
+              workOrderId={workOrder.id}
+              workOrderNumber={workOrder.wo_number}
+            />
+
             {workOrder.status === 'approved' && (
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -101,7 +117,7 @@ const handleMarkAsDone = async () => {
               <span className={`px-2 py-1 text-xs font-bold rounded-full ${
                   workOrder.status === 'approved' ? 'bg-green-100 text-green-800' :
                   workOrder.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                  workOrder.status === 'done' ? 'bg-blue-100 text-blue-800' : // <-- Status baru
+                  workOrder.status === 'done' ? 'bg-blue-100 text-blue-800' : 
                   'bg-yellow-100 text-yellow-800'
               }`}>
                 {workOrder.status.charAt(0).toUpperCase() + workOrder.status.slice(1)}
@@ -129,6 +145,8 @@ const handleMarkAsDone = async () => {
         </div>
         <div className="mt-6 border-t border-gray-200">
           <dl className="divide-y divide-gray-200">
+            <DetailRow label="Jenis Pekerjaan" value={workOrder.job_types?.nama_pekerjaan} />
+
             {Object.keys(details).map(key => {
               if (detailLabels[key]) {
                 const value = Array.isArray(details[key]) ? details[key].join(', ') : details[key];
@@ -142,7 +160,6 @@ const handleMarkAsDone = async () => {
         </div>
       </div>
       
-      {/* Panggil Komponen Modal */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

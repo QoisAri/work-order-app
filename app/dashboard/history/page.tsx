@@ -1,16 +1,17 @@
-// app/dashboard/history/page.tsx
-
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import HistoryClientPage from './HistoryClientPage';
 import { redirect } from 'next/navigation';
+import HistoryClientPage from './HistoryClientPage';
 
+// Tipe data ini sudah benar, 'equipments' didefinisikan sebagai objek tunggal.
 export type WorkOrderHistory = {
   id: string;
   created_at: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'done';
   wo_number: string | null;
-  equipments: { nama_equipment: string | null } | null;
+  equipments: { 
+    nama_equipment: string | null; 
+  } | null;
 };
 
 export default async function HistoryPage() {
@@ -27,14 +28,13 @@ export default async function HistoryPage() {
     }
   );
 
+  // 1. Cek autentikasi pengguna di server
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) {
     redirect('/login');
   }
 
-  // --- PERBAIKAN DI SINI ---
-  // Pastikan `wo_number` dan `status` ada di dalam string select.
+  // 2. Ambil data work order dari database
   const { data: workOrders, error } = await supabase
     .from('work_orders')
     .select('id, created_at, status, wo_number, equipments(nama_equipment)')
@@ -46,6 +46,7 @@ export default async function HistoryPage() {
     return <div className="p-8 text-red-500">Gagal memuat riwayat work order.</div>;
   }
   
+  // 3. Normalisasi data: memastikan 'equipments' selalu menjadi objek (bukan array)
   const formattedWorkOrders = workOrders?.map(wo => ({
     ...wo,
     equipments: Array.isArray(wo.equipments) ? wo.equipments[0] || null : wo.equipments,
@@ -60,6 +61,8 @@ export default async function HistoryPage() {
             Berikut adalah daftar semua work order yang pernah Anda buat.
           </p>
         </div>
+        
+        {/* 4. Kirim data yang sudah bersih ke Client Component untuk ditampilkan */}
         <HistoryClientPage initialWorkOrders={formattedWorkOrders} />
       </div>
     </div>

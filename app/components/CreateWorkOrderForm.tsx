@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useTransition } from 'react';
-import { updateUserProfile } from '../submit-work-order/action';
 
+// Tipe data untuk props
 type JobType = { id: string; nama_pekerjaan: string };
 type Department = { id: string; nama_departemen: string };
 type Equipment = { id: string; nama_equipment: string };
@@ -17,12 +17,19 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  // State untuk form data
+  const [fullName, setFullName] = useState(initialData.full_name || '');
+  const [noWa, setNoWa] = useState(initialData.no_wa || '');
+  const [subDepart, setSubDepart] = useState(initialData.sub_depart || '');
   
+  // State untuk dropdown yang saling berhubungan
   const [selectedJobType, setSelectedJobType] = useState<string>('');
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   const [isFetchingEquipments, setIsFetchingEquipments] = useState(false);
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string>('');
 
+  // Effect untuk mengambil data equipment berdasarkan jenis pekerjaan
   useEffect(() => {
     if (!selectedJobType) {
       setEquipments([]);
@@ -46,29 +53,60 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
     fetchEquipments();
   }, [selectedJobType]);
 
+  // --- FUNGSI HANDLE SUBMIT YANG DIPERBAIKI ---
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
 
-    // Validasi untuk Jenis Pekerjaan dan Equipment
-    if (!selectedJobType) {
-      setError("Silakan pilih Jenis Pekerjaan terlebih dahulu.");
-      return;
-    }
-    if (!selectedEquipmentId) {
-      setError("Silakan pilih Equipment terlebih dahulu.");
+    // Validasi
+    if (!selectedJobType || !selectedEquipmentId) {
+      setError("Silakan lengkapi Jenis Pekerjaan dan Equipment.");
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
+    // Kumpulkan semua data untuk dikirim ke API
+    const workOrderData = {
+        full_name: fullName,
+        no_wa: noWa,
+        sub_depart: subDepart,
+        job_type_id: selectedJobType,
+        equipment_id: selectedEquipmentId,
+    };
 
     startTransition(async () => {
-      const result = await updateUserProfile(formData);
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        router.push(`/dashboard/create/${selectedEquipmentId}?jobTypeId=${selectedJobType}`);
-      }
+        try {
+            // Panggil API route untuk menyimpan work order
+            const response = await fetch('/api/submit-work-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(workOrderData),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Terjadi kesalahan.');
+            }
+            
+            // --- PERUBAHAN DI SINI ---
+            // Arahkan ke halaman form equipment yang spesifik, bukan halaman detail.
+            // Kita akan menggunakan nama equipment untuk path URL.
+            const selectedEquipment = equipments.find(eq => eq.id === selectedEquipmentId);
+            const equipmentName = selectedEquipment?.nama_equipment.toLowerCase().replace(/ /g, '-');
+
+            if (!equipmentName) {
+              throw new Error("Nama equipment tidak ditemukan untuk membuat URL.");
+            }
+
+            // Simpan ID work order yang baru dibuat untuk digunakan di halaman berikutnya
+            const workOrderId = result.data.id;
+            
+            // Arahkan ke halaman form equipment dengan membawa ID work order
+            router.push(`/dashboard/${equipmentName}?workOrderId=${workOrderId}`);
+
+        } catch (err: any) {
+            setError(err.message);
+        }
     });
   }
 
@@ -80,23 +118,26 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
       
       {error && <p className="text-red-500 text-center font-semibold">{error}</p>}
 
+      {/* Input Nama, WA, Departemen */}
       <div>
         <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-        <input name="full_name" id="full_name" required defaultValue={initialData.full_name || ''} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+        <input name="full_name" id="full_name" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
       </div>
       <div>
         <label htmlFor="no_wa" className="block text-sm font-medium text-gray-700">No. WhatsApp</label>
-        <input name="no_wa" id="no_wa" required defaultValue={initialData.no_wa || ''} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+        <input name="no_wa" id="no_wa" required value={noWa} onChange={(e) => setNoWa(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
       </div>
       <div>
         <label htmlFor="sub_depart" className="block text-sm font-medium text-gray-700">Departemen</label>
-        <select name="sub_depart" id="sub_depart" required defaultValue={initialData.sub_depart || ''} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+        <select name="sub_depart" id="sub_depart" required value={subDepart} onChange={(e) => setSubDepart(e.target.value)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
           <option value="" disabled>Pilih Departemen...</option>
           {departments.map(dept => (
             <option key={dept.id} value={dept.nama_departemen}>{dept.nama_departemen}</option>
           ))}
         </select>
       </div>
+
+      {/* Dropdown Jenis Pekerjaan */}
       <div>
         <label htmlFor="job_type_id" className="block text-sm font-medium text-gray-700">Jenis Pekerjaan</label>
         <select 
@@ -114,6 +155,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
         </select>
       </div>
 
+      {/* Dropdown Equipment */}
       {selectedJobType && (
         <div>
           <label htmlFor="equipment_id" className="block text-sm font-medium text-gray-700">Pilih Equipment</label>
@@ -126,7 +168,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
             onChange={(e) => setSelectedEquipmentId(e.target.value)}
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
           >
-            <option value="">Pilih Equipment...</option>
+            <option value="">{isFetchingEquipments ? 'Memuat...' : 'Pilih Equipment...'}</option>
             {equipments.map(eq => (
               <option key={eq.id} value={eq.id}>{eq.nama_equipment}</option>
             ))}

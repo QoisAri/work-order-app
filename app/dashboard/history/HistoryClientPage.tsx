@@ -1,8 +1,7 @@
-// app/dashboard/history/HistoryClientPage.tsx
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link'; // Impor Link
+import Link from 'next/link';
 import FormattedDate from './FormattedDate';
 import { type WorkOrderHistory } from './page';
 
@@ -10,14 +9,16 @@ type HistoryClientPageProps = {
   initialWorkOrders: WorkOrderHistory[];
 };
 
-const getStatusBadge = (status: 'pending' | 'approved' | 'rejected') => {
-  // ... (fungsi ini tetap sama)
+// PERBAIKAN 1: Ajari fungsi ini untuk mengenali status 'done'
+const getStatusBadge = (status: 'pending' | 'approved' | 'rejected' | 'done') => {
   switch (status) {
     case 'approved':
       return <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>;
     case 'rejected':
       return <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>;
-    default:
+    case 'done': // <-- Tambahkan case untuk 'done'
+      return <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">Selesai</span>;
+    default: // <-- Ini akan menangani 'pending'
       return <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>;
   }
 };
@@ -43,7 +44,6 @@ export default function HistoryClientPage({ initialWorkOrders }: HistoryClientPa
             <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Equipment</th>
             <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nomor WO</th>
             <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-            {/* PERBAIKAN: Tambah kolom Aksi */}
             <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
           </tr>
         </thead>
@@ -56,9 +56,9 @@ export default function HistoryClientPage({ initialWorkOrders }: HistoryClientPa
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{wo.equipments?.nama_equipment || 'N/A'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono">{wo.wo_number || '-'}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getStatusBadge(wo.status)}</td>
-              {/* PERBAIKAN: Tambah sel untuk Aksi */}
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                {(wo.status === 'approved' || wo.status === 'rejected') && (
+                {/* PERBAIKAN 2: Tampilkan juga link untuk status 'done' */}
+                {(wo.status === 'approved' || wo.status === 'rejected' || wo.status === 'done') && (
                   <Link 
                     href={`/dashboard/history/${wo.id}`}
                     className="text-indigo-600 hover:text-indigo-800"
