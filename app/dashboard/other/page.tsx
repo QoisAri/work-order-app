@@ -1,39 +1,15 @@
 // app/dashboard/other/page.tsx
 import OtherForm from '@/app/dashboard/components/OtherForm';
-import { createClient } from '@/utils/supabase/server';
-import { notFound } from 'next/navigation';
-
-async function getEquipmentData() {
-    const supabase = createClient();
-    const equipmentName = 'Other'; // Sesuaikan nama ini
-
-    const { data: equipment, error } = await supabase
-        .from('equipments')
-        .select('id')
-        .eq('nama_equipment', equipmentName)
-        .single();
-
-    if (error || !equipment) {
-        console.error(`Error fetching equipment ID for ${equipmentName}:`, error);
-        notFound();
-    }
-
-    return {
-        equipmentId: equipment.id,
-    };
-}
 
 export default async function OtherWorkOrderPage() {
-  const { equipmentId } = await getEquipmentData();
-
-  return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
-          Work Order - Other
-        </h1>
-        <OtherForm equipmentId={equipmentId} />
-      </div>
-    </div>
-  );
+  return (
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-6">
+          Work Order - Other
+        </h1>
+        <OtherForm />
+      </div>
+    </div>
+  );
 }
