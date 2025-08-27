@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { type WorkOrder } from './AdminTabs';
 
@@ -72,7 +74,9 @@ export default function WorkOrderList({ workOrders, activeTab, onDelete, onEdit 
                   </button>
                 )}
                 
-                {(activeTab === 'approved' || activeTab === 'rejected') && (
+                {/* --- PERBAIKAN DI SINI --- */}
+                {/* Tombol Hapus sekarang muncul di semua tab */}
+                {(activeTab === 'pending' || activeTab === 'approved' || activeTab === 'rejected') && (
                   <button onClick={() => onDelete(wo.id)} className="text-red-600 hover:text-red-900">Hapus</button>
                 )}
               </td>

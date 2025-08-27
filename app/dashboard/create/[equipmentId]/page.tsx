@@ -34,15 +34,20 @@ export default function CreateWorkOrderPageById() {
   const params = useParams();
   const searchParams = useSearchParams();
   
-  const equipmentId = params.equipmentid as string;
+  // --- PERBAIKAN DI SINI: Nama parameter harus cocok persis dengan nama folder -> [equipmentId] ---
+  const equipmentid = params.equipmentid as string;
+  
   const jobTypeId = searchParams.get('jobTypeId');
+  const fullName = searchParams.get('fullName');
+  const noWa = searchParams.get('noWa');
+  const subDepart = searchParams.get('subDepart');
 
   const [equipment, setEquipment] = useState<Equipment>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!equipmentId) {
+    if (!equipmentid) {
       setLoading(false);
       setError("Equipment ID tidak ditemukan di URL.");
       return;
@@ -56,11 +61,11 @@ export default function CreateWorkOrderPageById() {
         const { data, error: dbError } = await supabase
           .from('equipments')
           .select('id, nama_equipment')
-          .eq('id', equipmentId)
+          .eq('id', equipmentid)
           .single();
 
         if (dbError || !data) {
-          throw new Error(`Gagal menemukan data untuk equipment ID: "${equipmentId}"`);
+          throw new Error(`Gagal menemukan data untuk equipment ID: "${equipmentid}"`);
         }
         setEquipment(data);
 
@@ -72,7 +77,7 @@ export default function CreateWorkOrderPageById() {
     };
 
     getEquipment();
-  }, [equipmentId]);
+  }, [equipmentid]);
 
   if (loading) {
     return <div className="p-8">Memuat form...</div>;
@@ -100,8 +105,14 @@ export default function CreateWorkOrderPageById() {
 
   return (
     <div className="p-4 sm:p-6 md:p-8">
-      {/* Meneruskan jobTypeId ke komponen form spesifik */}
-      <FormComponent equipmentId={equipment.id} jobTypeId={jobTypeId} />
+      {/* Meneruskan SEMUA data ke komponen form */}
+      <FormComponent 
+        equipmentId={equipment.id} 
+        jobTypeId={jobTypeId}
+        fullName={fullName}
+        noWa={noWa}
+        subDepart={subDepart}
+      />
     </div>
   );
 }

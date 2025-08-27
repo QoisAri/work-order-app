@@ -53,7 +53,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
     fetchEquipments();
   }, [selectedJobType]);
 
-  // --- FUNGSI HANDLE SUBMIT YANG DIPERBAIKI ---
+  // --- FUNGSI HANDLE SUBMIT ---
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -75,7 +75,7 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
 
     startTransition(async () => {
         try {
-            // Panggil API route untuk menyimpan work order
+            // Panggil API route untuk MENYIMPAN work order awal
             const response = await fetch('/api/submit-work-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -88,21 +88,12 @@ export default function CreateWorkOrderForm({ jobTypes, departments, initialData
                 throw new Error(result.message || 'Terjadi kesalahan.');
             }
             
-            // --- PERUBAHAN DI SINI ---
-            // Arahkan ke halaman form equipment yang spesifik, bukan halaman detail.
-            // Kita akan menggunakan nama equipment untuk path URL.
-            const selectedEquipment = equipments.find(eq => eq.id === selectedEquipmentId);
-            const equipmentName = selectedEquipment?.nama_equipment.toLowerCase().replace(/ /g, '-');
-
-            if (!equipmentName) {
-              throw new Error("Nama equipment tidak ditemukan untuk membuat URL.");
-            }
-
-            // Simpan ID work order yang baru dibuat untuk digunakan di halaman berikutnya
+            // --- PERBAIKAN KRITIS DI SINI ---
+            // Ambil ID work order yang baru saja dibuat
             const workOrderId = result.data.id;
             
-            // Arahkan ke halaman form equipment dengan membawa ID work order
-            router.push(`/dashboard/${equipmentName}?workOrderId=${workOrderId}`);
+            // Arahkan ke halaman form equipment dengan MEMBAWA ID tersebut
+            router.push(`/dashboard/create/${selectedEquipmentId}?workOrderId=${workOrderId}`);
 
         } catch (err: any) {
             setError(err.message);
