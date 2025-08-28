@@ -59,8 +59,8 @@ export default function StorageForm() {
     });
   };
 
-  const storageNoOptions = [ "107 (20 ft)", "108 (20 ft)", /* ... and so on */ ];
-  const maintenanceOptions = [ "Cover", "Cylinder", "Tubing and Fitting", /* ... and so on */ ];
+  const storageNoOptions = [ "107 (20 ft)", "108 (20 ft)", "109 (20 ft)", "110 (20 ft)", "111 (20 ft)", "112 (20 ft)", "113 (20 ft)", "115 (20 ft)", "118 (20 ft)", "119 (20 ft)", "201 (20 ft)", "203 (20 ft)", "303 (20 ft)", "304 (20 ft)", "305 (20 ft)", "306 (20 ft)", "307 (20 ft)", "308 (20 ft)", "501 (20 ft)", "502 (20 ft)", "503 (20 ft)", "504 (20 ft)", "505 (20 ft)", "506 (20 ft)", "507 (20 ft)", "508 (20 ft)", "509 (20 ft)", "510 (20 ft)", "511 (20 ft)", "512 (20 ft)", "1001 (10 ft)", "1002 (10 ft)", "1004 (10 ft)", "1005 (10 ft)", "1007 (10 ft)", "1008 (10 ft)", "1010 (10 ft)", "1011 (10 ft)", "1012 (10 ft)", "1013 (10 ft)", "1014 (10 ft)", "1015 (10 ft)", "1016 (10 ft)", "1017 (10 ft)", "1018 (10 ft)", "1019 (10 ft)", "1020 (10 ft)", "1021 (10 ft)", "2001 (10 ft)", "2002 (10 ft)", "2003 (10 ft)", "2004 (10 ft)", "3001 (10 ft)", "3002 (10 ft)", "3003 (10 ft)", "3004 (10 ft)", "6001 (10 ft)", "6002 (10 ft)", "6003 (10 ft)", "6004 (10 ft)", "EK01 (40 ft)", "EK02 (40 ft)", "EK03 (40 ft)", "EK04 (40 ft)", "MX01 (20 ft)", "MX02 (20 ft)", "KR01 (20 ft)" ];
+  const maintenanceOptions = [ "Cover", "Cylinder", "Tubing and Fitting", "Ballvalve", "Pressure Gauge", "Frame", "Drain (Condensate)", "PSV (Pressure Safety Valve)", "PRD (Pressure Relief Device)", "Receptacle", "Logo/Safety Sign", "Painting", "Fabrication" ];
 
   if (!workOrderId) {
     return (

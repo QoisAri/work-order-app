@@ -88,7 +88,7 @@ export default function SurveyForm() {
               </div>
               <div>
                 <label htmlFor="deskripsi_survey" className="block text-sm font-medium text-gray-700">Deskripsi Survey *</label>
-                <p className="text-xs text-gray-500 mt-1">Diisi waktu survey serta alamat lengkap dan maps (jika ada)</p>
+                <p className="text-xs text-gray-500 mt-1">Diisi waktu survey serta alamat lengkap</p>
                 <textarea name="deskripsi_survey" id="deskripsi_survey" rows={4} required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
