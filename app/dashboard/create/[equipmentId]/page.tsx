@@ -32,8 +32,6 @@ const equipmentFormMap: { [key: string]: React.ComponentType<any> } = {
 
 export default function CreateWorkOrderPageById() {
   const params = useParams();
-  
-  // --- PERBAIKAN #1: Nama parameter harus cocok persis dengan nama folder -> [equipmentId] ---
   const equipmentId = params.equipmentId as string;
   
   const [equipment, setEquipment] = useState<Equipment>(null);
@@ -73,15 +71,22 @@ export default function CreateWorkOrderPageById() {
     getEquipment();
   }, [equipmentId]);
 
+  // --- TAMPILAN LOADING YANG LEBIH BAIK ---
   if (loading) {
-    return <div className="p-8">Memuat form...</div>;
+    return (
+        <div className="flex justify-center items-center w-full h-96">
+            <p className="text-lg text-gray-500">Memuat formulir...</p>
+        </div>
+    );
   }
 
+  // --- TAMPILAN ERROR YANG LEBIH BAIK ---
   if (error || !equipment) {
     return (
       <div className="p-8">
-        <div role="alert" className="rounded border-s-4 border-red-500 bg-red-50 p-4">
-          <strong className="block font-medium text-red-800">{error || "Equipment tidak ditemukan."}</strong>
+        <div role="alert" className="rounded-xl border border-gray-200 bg-white p-6 max-w-lg mx-auto shadow-md">
+          <strong className="block font-medium text-red-700">Terjadi Kesalahan</strong>
+          <p className="mt-2 text-sm text-gray-600">{error || "Equipment tidak ditemukan."}</p>
         </div>
       </div>
     );
@@ -97,10 +102,21 @@ export default function CreateWorkOrderPageById() {
     );
   }
 
+  // --- TAMPILAN UTAMA YANG LEBIH RAPI ---
   return (
-    <div className="p-4 sm:p-6 md:p-8">
-      {/* --- PERBAIKAN #2: Hapus semua props dari sini --- */}
-      <FormComponent />
-    </div>
+    <div className="w-full">
+        {/* Header Halaman */}
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Formulir Work Order
+          </h1>
+          <p className="mt-2 text-md text-gray-600">
+            Silakan lengkapi detail untuk equipment <span className="font-semibold text-indigo-600">{equipment.nama_equipment}</span>.
+          </p>
+        </div>
+        
+        {/* Komponen Form dirender di sini */}
+        <FormComponent />
+    </div>
   );
 }
